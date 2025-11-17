@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -76,6 +77,23 @@ class _OnboardingPageState extends State<OnboardingPage>
     super.dispose();
   }
 
+  void _onMulaiPressed() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomePage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,35 +116,41 @@ class _OnboardingPageState extends State<OnboardingPage>
               ),
 
               // Mulai button (only on last page)
-              if (_currentPage == _contents.length - 1)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: SizedBox(
-                    width: 94,
-                    height: 34,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Navigate to main app or home page
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0DB662),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _currentPage == _contents.length - 1
+                    ? Padding(
+                        key: const ValueKey('mulai_button'),
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: SizedBox(
+                          width: 94,
+                          height: 34,
+                          child: ElevatedButton(
+                            onPressed: _onMulaiPressed,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0DB662),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Mulai',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                        elevation: 0,
+                      )
+                    : const SizedBox(
+                        key: ValueKey('empty_button'),
+                        height: 54,
                       ),
-                      child: const Text(
-                        'Mulai',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              ),
 
               // Page indicators
               Padding(

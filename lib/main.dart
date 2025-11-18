@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'config/firebase_config.dart';
 import 'pages/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi Firebase
+  // PENTING: Untuk Android, google-services.json akan handle config otomatis
+  // Kita tetap perlu panggil initializeApp, tapi tanpa options untuk Android
+  await FirebaseConfig.initialize();
+
   runApp(const MyApp());
 }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "727120428216",
+    "project_id": "tugasmobile-59071",
+    "storage_bucket": "tugasmobile-59071.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:727120428216:android:ba0585e37c964b0c40c84d",
+        "android_client_info": {
+          "package_name": "com.mobile.cekaceka"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVKmv1MXJuur3hB6yOYah3xx3syKh1OnA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

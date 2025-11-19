@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'groups_page.dart'; // Pastikan file groups_page.dart sudah ada di folder yang sama/benar
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -52,94 +53,117 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: Column(
-        children: [
-          // Header
-          _buildHeader(),
+      
+      // --- LOGIKA NAVIGASI (Disini perubahannya) ---
+      // Kalau index 0 -> Panggil fungsi _buildHomeContent (yang ada di bawah)
+      // Kalau index 1 -> Panggil file GroupsPage
+      body: _selectedIndex == 0 
+          ? _buildHomeContent() 
+          : _selectedIndex == 1
+              ? const GroupsPage() 
+              : _selectedIndex == 2
+                  ? const Center(child: Text("Halaman History"))
+                  : const Center(child: Text("Halaman Profile")),
+                  
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
 
-          // Content
-          Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
+  // --- FUNGSI BARU ---
+  // Ini adalah isi 'body' lama kamu yang kita pindahkan ke sini
+  // Supaya codingan di atas (Scaffold) tidak berantakan.
+  Widget _buildHomeContent() {
+    return Column(
+      children: [
+        // Header
+        _buildHeader(),
 
-                      // Ringkasan total section
-                      const Text(
-                        'Ringkasan total anda',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF44444C),
-                          letterSpacing: -0.44,
+        // Content
+        Expanded(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Ringkasan total section
+                    const Text(
+                      'Ringkasan total anda',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF44444C),
+                        letterSpacing: -0.44,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Summary cards
+                    Row(
+                      children: [
+                        Expanded(
+                            child: _buildSummaryCard(
+                                'Total Utang :', 'Rp. 187.500.00')),
+                        const SizedBox(width: 12),
+                        Expanded(
+                            child: _buildSummaryCard(
+                                'Total Piutang :', 'Rp. 87.000.00')),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Grup saya section
+                    const Text(
+                      'Grup saya',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF44444C),
+                        letterSpacing: -0.44,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Group list
+                    ...List.generate(_groups.length, (index) {
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: Duration(milliseconds: 400 + (index * 150)),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, child) {
+                          return Transform.translate(
+                            offset: Offset(0, 20 * (1 - value)),
+                            child: Opacity(
+                              opacity: value,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildGroupCard(_groups[index]),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                      );
+                    }),
 
-                      // Summary cards
-                      Row(
-                        children: [
-                          Expanded(child: _buildSummaryCard('Total Utang :', 'Rp. 187.500.00')),
-                          const SizedBox(width: 12),
-                          Expanded(child: _buildSummaryCard('Total Piutang :', 'Rp. 87.000.00')),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Grup saya section
-                      const Text(
-                        'Grup saya',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF44444C),
-                          letterSpacing: -0.44,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Group list
-                      ...List.generate(_groups.length, (index) {
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 400 + (index * 150)),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, child) {
-                            return Transform.translate(
-                              offset: Offset(0, 20 * (1 - value)),
-                              child: Opacity(
-                                opacity: value,
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildGroupCard(_groups[index]),
-                          ),
-                        );
-                      }),
-
-                      const SizedBox(height: 20),
-                    ],
-                  ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
-      ),
-      bottomNavigationBar: _buildBottomNavBar(),
+        ),
+      ],
     );
   }
+  // --- AKHIR FUNGSI BARU ---
 
   Widget _buildHeader() {
     return Container(
@@ -155,7 +179,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
       child: Row(
         children: [
-          // Profile picture
           Container(
             width: 65,
             height: 65,
@@ -171,8 +194,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ),
           const SizedBox(width: 16),
-
-          // Greeting text
           const Expanded(
             child: Text(
               'Halo, Ian!',
@@ -185,12 +206,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ),
             ),
           ),
-
-          // Menu icon
           IconButton(
-            onPressed: () {
-              // Handle menu tap
-            },
+            onPressed: () {},
             icon: const Icon(
               Icons.menu,
               color: Colors.white,
@@ -268,7 +285,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
       child: Row(
         children: [
-          // Group image
           Container(
             width: 60,
             height: 60,
@@ -283,8 +299,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ),
           const SizedBox(width: 16),
-
-          // Group name
           Expanded(
             child: Text(
               group.name,
@@ -326,7 +340,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
-
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -364,6 +377,5 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
 class GroupItem {
   final String name;
-
   GroupItem({required this.name});
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'groups_page.dart'; // Pastikan file groups_page.dart sudah ada di folder yang sama/benar
+import 'groups_page.dart';
+import 'activity_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           : _selectedIndex == 1
               ? const GroupsPage() 
               : _selectedIndex == 2
-                  ? const Center(child: Text("Halaman History"))
+                  ? const ActivityPage()
                   : const Center(child: Text("Halaman Profile")),
                   
       bottomNavigationBar: _buildBottomNavBar(),
@@ -223,16 +224,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0DB662).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(23),
+        color: const Color.fromARGB(255, 26, 218, 122).withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: const Color(0xFF0DB662).withValues(alpha: 0.5),
+          color: const Color(0xFF0DB662).withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 4,
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 2,
             offset: const Offset(0, 0),
           ),
         ],
@@ -269,16 +270,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF087B42).withValues(alpha: 0.1),
+        color: const Color.fromARGB(255, 26, 218, 122).withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: const Color(0xFF0DB662).withValues(alpha: 0.5),
+          color: const Color(0xFF0DB662).withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 4,
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 2,
             offset: const Offset(0, 0),
           ),
         ],
@@ -331,7 +332,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         children: [
           _buildNavItem(Icons.home_rounded, 'Home', 0),
           _buildNavItem(Icons.group_rounded, 'Group', 1),
-          _buildNavItem(Icons.receipt_long_rounded, 'History', 2),
+          _buildNavItem(Icons.receipt_long_rounded, 'Activity', 2),
           _buildNavItem(Icons.person_rounded, 'Profile', 3),
         ],
       ),

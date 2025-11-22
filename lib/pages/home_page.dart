@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'groups_page.dart'; // Pastikan file groups_page.dart sudah ada di folder yang sama/benar
+import 'groups_page.dart';
+import 'activity_page.dart';
+import 'profile_page.dart'; // Import halaman profile baru
+import '../models/group_data.dart';
+import 'group_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,12 +17,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  final List<GroupItem> _groups = [
-    GroupItem(name: 'DAP A17'),
-    GroupItem(name: 'Badminton DAP A17'),
-    GroupItem(name: 'Rumah Angkatan'),
-  ];
 
   @override
   void initState() {
@@ -54,24 +52,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       
-      // --- LOGIKA NAVIGASI (Disini perubahannya) ---
-      // Kalau index 0 -> Panggil fungsi _buildHomeContent (yang ada di bawah)
-      // Kalau index 1 -> Panggil file GroupsPage
+      // --- LOGIKA NAVIGASI UTAMA ---
       body: _selectedIndex == 0 
           ? _buildHomeContent() 
           : _selectedIndex == 1
               ? const GroupsPage() 
               : _selectedIndex == 2
-                  ? const Center(child: Text("Halaman History"))
-                  : const Center(child: Text("Halaman Profile")),
+                  ? const ActivityPage()
+                  : const ProfilePage(), // Menampilkan ProfilePage di tab index 3
                   
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  // --- FUNGSI BARU ---
-  // Ini adalah isi 'body' lama kamu yang kita pindahkan ke sini
-  // Supaya codingan di atas (Scaffold) tidak berantakan.
   Widget _buildHomeContent() {
     return Column(
       children: [
@@ -131,8 +124,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                     const SizedBox(height: 16),
 
-                    // Group list
-                    ...List.generate(_groups.length, (index) {
+                    // Group list (MENGGUNAKAN DATA GLOBAL)
+                    ...List.generate(globalGroupList.length, (index) {
                       return TweenAnimationBuilder<double>(
                         tween: Tween(begin: 0.0, end: 1.0),
                         duration: Duration(milliseconds: 400 + (index * 150)),
@@ -148,7 +141,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 16),
-                          child: _buildGroupCard(_groups[index]),
+                          child: _buildGroupCard(globalGroupList[index]),
                         ),
                       );
                     }),
@@ -163,7 +156,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ],
     );
   }
-  // --- AKHIR FUNGSI BARU ---
 
   Widget _buildHeader() {
     return Container(
@@ -185,7 +177,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withOpacity(0.3),
             ),
             child: const Icon(
               Icons.person,
@@ -223,16 +215,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0DB662).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(23),
+        color: const Color.fromARGB(255, 26, 218, 122).withOpacity(0.09),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: const Color(0xFF0DB662).withValues(alpha: 0.5),
+          color: const Color(0xFF0DB662).withOpacity(0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 2,
             offset: const Offset(0, 0),
           ),
         ],
@@ -266,52 +258,64 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildGroupCard(GroupItem group) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF087B42).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: const Color(0xFF0DB662).withValues(alpha: 0.5),
-          width: 1,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GroupDetailPage(group: group),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 26, 218, 122).withOpacity(0.09),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: const Color(0xFF0DB662).withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 2,
+              offset: const Offset(0, 0),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 4,
-            offset: const Offset(0, 0),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.grey[300],
-            ),
-            child: const Icon(
-              Icons.group,
-              color: Colors.grey,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              group.name,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF44444C),
-                letterSpacing: -0.32,
+        child: Row(
+          children: [
+            // GROUP IMAGE
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                image: DecorationImage(
+                  image: AssetImage(group.image),
+                  fit: BoxFit.cover,
+                ),
+                color: Colors.grey[300],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            
+            // GROUP NAME
+            Expanded(
+              child: Text(
+                group.name,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF44444C),
+                  letterSpacing: -0.32,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -331,7 +335,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         children: [
           _buildNavItem(Icons.home_rounded, 'Home', 0),
           _buildNavItem(Icons.group_rounded, 'Group', 1),
-          _buildNavItem(Icons.receipt_long_rounded, 'History', 2),
+          _buildNavItem(Icons.receipt_long_rounded, 'Activity', 2),
           _buildNavItem(Icons.person_rounded, 'Profile', 3),
         ],
       ),
@@ -373,9 +377,4 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
     );
   }
-}
-
-class GroupItem {
-  final String name;
-  GroupItem({required this.name});
 }

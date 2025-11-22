@@ -207,38 +207,6 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
-  Widget _buildTabItem(String title, int index) {
-    final isSelected = _selectedTab == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedTab = index;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF065F33) : Colors.transparent, 
-            border: isSelected 
-                ? const Border(bottom: BorderSide(color: Colors.white, width: 3))
-                : null,
-          ),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildActivityCard(Map<String, dynamic> data) {
     Color statusColor;
     

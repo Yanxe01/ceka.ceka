@@ -66,7 +66,7 @@ class _ActivityPageState extends State<ActivityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           // HEADER SECTION
@@ -149,7 +149,7 @@ class _ActivityPageState extends State<ActivityPage> {
                           boxShadow: [
                             // Efek "Shadow dikit bgt"
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -198,7 +198,7 @@ class _ActivityPageState extends State<ActivityPage> {
               fontSize: 16,
               fontWeight: FontWeight.w500,
               // Teks jadi putih terang jika dipilih, agak pudar jika tidak
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
             ),
             child: Text(title),
           ),
@@ -221,7 +221,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFDCF0E9).withOpacity(0.3), 
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF0DB662), width: 1),
       ),
@@ -248,28 +248,32 @@ class _ActivityPageState extends State<ActivityPage> {
               children: [
                 Text(
                   data['title'],
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF44444C),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Description: ${data['desc']}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
-                    color: Colors.grey,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[400]
+                        : Colors.grey,
                   ),
                 ),
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
-                      color: Colors.grey,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey,
                     ),
                     children: [
                       const TextSpan(text: 'Status: '),
@@ -286,11 +290,11 @@ class _ActivityPageState extends State<ActivityPage> {
                 const SizedBox(height: 4),
                 Text(
                   'Total : ${data['amount']}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44444C),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],
@@ -299,13 +303,13 @@ class _ActivityPageState extends State<ActivityPage> {
 
           if (_selectedTab == 1 && data['date'] != null)
             Padding(
-              padding: const EdgeInsets.only(top: 40), 
+              padding: const EdgeInsets.only(top: 40),
               child: Text(
                 data['date'],
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 10,
-                  color: Color(0xFF44444C),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),

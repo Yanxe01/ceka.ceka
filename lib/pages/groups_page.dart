@@ -30,15 +30,15 @@ class _GroupsPageState extends State<GroupsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 20),
             
             // Judul Halaman
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -47,7 +47,7 @@ class _GroupsPageState extends State<GroupsPage> {
                     fontFamily: 'Poppins',
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44444C),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ),
@@ -65,22 +65,33 @@ class _GroupsPageState extends State<GroupsPage> {
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardTheme.color,
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.black54, width: 1),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[700]!
+                              : Colors.black54,
+                          width: 1,
+                        ),
                       ),
                       child: TextField(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Cari',
-                          hintStyle: TextStyle(
+                          hintStyle: const TextStyle(
                             fontFamily: 'Poppins',
                             color: Colors.grey,
                           ),
-                          prefixIcon: Icon(Icons.search, color: Colors.black87),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 13),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 13),
                         ),
-                        style: const TextStyle(fontFamily: 'Poppins'),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                       ),
                     ),
                   ),
@@ -95,7 +106,7 @@ class _GroupsPageState extends State<GroupsPage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF9747FF).withOpacity(0.1), 
+                        color: const Color(0xFF9747FF).withValues(alpha: 0.1),
                         border: Border.all(color: const Color(0xFF9747FF), width: 1.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -150,19 +161,19 @@ class _GroupsPageState extends State<GroupsPage> {
                     }
                   },
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).cardTheme.color,
                     side: const BorderSide(color: Color(0xFF0DB662)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Buat Grup Baru',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF44444C),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -209,11 +220,11 @@ class _GroupsPageState extends State<GroupsPage> {
             Expanded(
               child: Text(
                 group.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF44444C),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),

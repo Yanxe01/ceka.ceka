@@ -10,7 +10,7 @@ class GroupDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // Floating Action Button "Add Expense" di bawah kanan
       floatingActionButton: SizedBox(
         height: 45,
@@ -181,112 +181,122 @@ class GroupDetailPage extends StatelessWidget {
   }
 
   Widget _buildWelcomeMessage() {
-    return Row(
-      children: const [
-        Text("👋", style: TextStyle(fontSize: 20)),
-        SizedBox(width: 8),
-        Text(
-          "You're fully set up. Jump right in!",
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF44444C),
+    return Builder(
+      builder: (context) => Row(
+        children: [
+          const Text("👋", style: TextStyle(fontSize: 20)),
+          const SizedBox(width: 8),
+          Text(
+            "You're fully set up. Jump right in!",
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildMonthSection(String month, List<Widget> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          month,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
+    return Builder(
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            month,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        ...items,
-        const SizedBox(height: 20),
-      ],
+          const SizedBox(height: 12),
+          ...items,
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
   Widget _buildExpenseItem(String day, String monthShort, String title, String subtitle, bool isPaid, {bool isAlert = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          // Tanggal
-          Column(
-            children: [
-              Text(
-                monthShort,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF44444C),
-                ),
-              ),
-              Text(
-                day,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF44444C),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
-
-          // Icon Box
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0DB662),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.receipt_long, color: Colors.white),
-          ),
-          const SizedBox(width: 16),
-
-          // Title & Subtitle
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Builder(
+      builder: (context) => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          children: [
+            // Tanggal
+            Column(
               children: [
                 Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF44444C),
-                  ),
-                ),
-                Text(
-                  subtitle,
+                  monthShort,
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: isAlert ? const Color(0xFFFF5656) : Colors.grey, // Merah jika warning
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                ),
+                Text(
+                  day,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+
+            // Icon Box
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0DB662),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.receipt_long, color: Colors.white),
+            ),
+            const SizedBox(width: 16),
+
+            // Title & Subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: isAlert
+                          ? const Color(0xFFFF5656)
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[400]
+                              : Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

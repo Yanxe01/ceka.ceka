@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'notification_settings_page.dart';
 import 'login_page.dart'; // Import login page untuk navigasi logout
+import '../providers/theme_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -10,38 +12,38 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _isDarkTheme = false; // Dummy state untuk switch
 
   // --- MODAL LOGOUT ---
   void _showLogoutDialog() {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     showDialog(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 "Kamu akan keluar dari akun kamu",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF44444C),
+                  color: isDark ? Colors.white : const Color(0xFF44444C),
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 "Terima kasih telah menggunakan CekaCeka.\nSampai jumpa lagi ya!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: isDark ? Colors.grey[400] : Colors.grey,
                 ),
               ),
               const SizedBox(height: 24),
@@ -105,6 +107,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // --- MODAL HUBUNGI KAMI ---
   void _showContactSheet() {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -115,26 +118,26 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFEAEAEA), // Warna abu-abu seperti di gambar
+                color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFEAEAEA),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
                       "Hubungi kami",
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey,
+                        color: isDark ? Colors.grey[400] : Colors.grey,
                       ),
                     ),
                   ),
-                  const Divider(height: 1, color: Colors.grey),
+                  Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey),
                   _buildContactAction("Gmail"),
-                  const Divider(height: 1, color: Colors.grey),
+                  Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey),
                   _buildContactAction("Contact Person"),
                 ],
               ),
@@ -146,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEAEAEA),
+                  backgroundColor: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFEAEAEA),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -170,6 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildContactAction(String title) {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     return InkWell(
       onTap: () => Navigator.pop(context),
       child: Container(
@@ -178,11 +182,11 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Center(
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF44444C),
+              color: isDark ? Colors.white : const Color(0xFF44444C),
             ),
           ),
         ),
@@ -192,8 +196,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -289,20 +296,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     }
                   ),
                   _buildMenuItem(
-                    Icons.wb_sunny_outlined, 
-                    "Tampilan", 
+                    Icons.wb_sunny_outlined,
+                    "Tampilan",
                     trailing: Transform.scale(
                       scale: 0.8,
                       child: Switch(
-                        value: _isDarkTheme,
-                        activeColor: Colors.white,
+                        value: isDark,
+                        activeThumbColor: Colors.white,
                         activeTrackColor: Colors.black,
                         inactiveThumbColor: Colors.white,
                         inactiveTrackColor: Colors.grey.shade300,
                         onChanged: (value) {
-                          setState(() {
-                            _isDarkTheme = value; // Dummy change state
-                          });
+                          themeProvider.toggleTheme();
                         },
                       ),
                     ),
@@ -330,7 +335,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: const Color(0xFFFF5656), // Merah
                       iconSize: 28,
                       style: IconButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF5656).withOpacity(0.1),
+                        backgroundColor: const Color(0xFFFF5656).withValues(alpha: 0.1),
                         padding: const EdgeInsets.all(12),
                       ),
                     ),
@@ -350,17 +355,18 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'Poppins',
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF44444C),
+          color: Theme.of(context).textTheme.titleLarge?.color,
         ),
       ),
     );
   }
 
   Widget _buildMenuItem(IconData icon, String title, {Widget? trailing, VoidCallback? onTap, bool isGoogleIcon = false}) {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -368,12 +374,12 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Row(
           children: [
             // Icon
-            isGoogleIcon 
+            isGoogleIcon
             ? const Icon(Icons.g_mobiledata, size: 28, color: Colors.blue) // Placeholder google icon
-            : Icon(icon, size: 22, color: const Color(0xFF44444C)),
-            
+            : Icon(icon, size: 22, color: isDark ? Colors.white : const Color(0xFF44444C)),
+
             const SizedBox(width: 16),
-            
+
             // Text
             Expanded(
               child: Text(
@@ -381,7 +387,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
                   fontWeight: FontWeight.w400,
                 ),
               ),

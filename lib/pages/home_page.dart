@@ -50,17 +50,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       // --- LOGIKA NAVIGASI UTAMA ---
-      body: _selectedIndex == 0 
-          ? _buildHomeContent() 
+      body: _selectedIndex == 0
+          ? _buildHomeContent()
           : _selectedIndex == 1
-              ? const GroupsPage() 
+              ? const GroupsPage()
               : _selectedIndex == 2
                   ? const ActivityPage()
                   : const ProfilePage(), // Menampilkan ProfilePage di tab index 3
-                  
+
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
@@ -85,13 +85,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     const SizedBox(height: 20),
 
                     // Ringkasan total section
-                    const Text(
+                    Text(
                       'Ringkasan total anda',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 22,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF44444C),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         letterSpacing: -0.44,
                       ),
                     ),
@@ -112,13 +112,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     const SizedBox(height: 32),
 
                     // Grup saya section
-                    const Text(
+                    Text(
                       'Grup saya',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 22,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF44444C),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         letterSpacing: -0.44,
                       ),
                     ),
@@ -177,7 +177,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
             ),
             child: const Icon(
               Icons.person,
@@ -198,14 +198,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ),
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.menu,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
         ],
       ),
     );
@@ -215,15 +207,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 26, 218, 122).withOpacity(0.09),
+        color: const Color.fromARGB(255, 26, 218, 122).withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: const Color(0xFF0DB662).withOpacity(0.2),
+          color: const Color(0xFF0DB662).withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 2,
             offset: const Offset(0, 0),
           ),
@@ -233,11 +225,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF44444C),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
               letterSpacing: -0.3,
             ),
           ),
@@ -270,15 +262,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 26, 218, 122).withOpacity(0.09),
+          color: const Color.fromARGB(255, 26, 218, 122).withValues(alpha: 0.09),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-            color: const Color(0xFF0DB662).withOpacity(0.2),
+            color: const Color(0xFF0DB662).withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 2,
               offset: const Offset(0, 0),
             ),
@@ -300,16 +292,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ),
             ),
             const SizedBox(width: 16),
-            
+
             // GROUP NAME
             Expanded(
               child: Text(
                 group.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF44444C),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   letterSpacing: -0.32,
                 ),
               ),
@@ -321,23 +313,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildBottomNavBar() {
-    return Container(
-      height: 80,
-      decoration: const BoxDecoration(
-        color: Color(0xFF087B42),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(23),
-          topRight: Radius.circular(23),
-        ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(23),
+        topRight: Radius.circular(23),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.home_rounded, 'Home', 0),
-          _buildNavItem(Icons.group_rounded, 'Group', 1),
-          _buildNavItem(Icons.receipt_long_rounded, 'Activity', 2),
-          _buildNavItem(Icons.person_rounded, 'Profile', 3),
-        ],
+      child: Container(
+        height: 80,
+        decoration: const BoxDecoration(
+          color: Color(0xFF087B42),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(Icons.home_rounded, 'Home', 0),
+            _buildNavItem(Icons.group_rounded, 'Group', 1),
+            _buildNavItem(Icons.receipt_long_rounded, 'Activity', 2),
+            _buildNavItem(Icons.person_rounded, 'Profile', 3),
+          ],
+        ),
       ),
     );
   }

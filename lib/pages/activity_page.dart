@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'bills_page.dart'; // Import halaman Bills
+import '../models/group_data.dart'; // Import model untuk passing data
 
-// NAMA CLASS SUDAH DIGANTI JADI ActivityPage
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
 
@@ -122,7 +123,6 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
 
           // 2. TAB BAR DENGAN SLIDING EFFECT
-          // Kita bungkus dengan ClipRRect agar animasi slide tidak keluar dari border radius bawah
           ClipRRect(
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(0),
@@ -133,35 +133,33 @@ class _ActivityPageState extends State<ActivityPage> {
               color: const Color(0xFF087B42), // Warna dasar (saat tidak dipilih)
               child: Stack(
                 children: [
-                  // LAYER 1: Sliding Indicator (Kotak Hijau Gelap yang Bergerak)
+                  // LAYER 1: Sliding Indicator
                   AnimatedAlign(
                     alignment: _selectedTab == 0
                         ? Alignment.centerLeft
                         : Alignment.centerRight,
-                    duration: const Duration(milliseconds: 300), // Kecepatan slide (halus)
-                    curve: Curves.easeOutCubic, // Efek gerak agar terlihat natural
+                    duration: const Duration(milliseconds: 300), 
+                    curve: Curves.easeOutCubic, 
                     child: FractionallySizedBox(
-                      widthFactor: 0.5, // Lebar kotak selalu 50% dari layar
-                      heightFactor: 1.0, // Tinggi full
+                      widthFactor: 0.5, 
+                      heightFactor: 1.0, 
                       child: Container(
                         decoration: BoxDecoration(
                           color: const Color(0xFF065F33), // Hijau Gelap (Selected)
                           boxShadow: [
-                            // Efek "Shadow dikit bgt"
                             BoxShadow(
                               color: Colors.black.withOpacity(0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
                           ],
-                          // Opsional: Jika ingin sudut atas sliding box agak rounded
                           borderRadius: BorderRadius.circular(10), 
                         ),
                       ),
                     ),
                   ),
 
-                  // LAYER 2: Teks Tombol (Di atas slider)
+                  // LAYER 2: Teks Tombol
                   Row(
                     children: [
                       _buildSlidingTabItem("Bills", 0),
@@ -177,7 +175,6 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
-  // Helper kecil untuk Teks Tab agar kodingan di atas lebih rapi
   Widget _buildSlidingTabItem(String title, int index) {
     final isSelected = _selectedTab == index;
     return Expanded(
@@ -187,7 +184,6 @@ class _ActivityPageState extends State<ActivityPage> {
             _selectedTab = index;
           });
         },
-        // Container transparan agar bisa di-klik
         child: Container(
           color: Colors.transparent, 
           alignment: Alignment.center,
@@ -197,7 +193,6 @@ class _ActivityPageState extends State<ActivityPage> {
               fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              // Teks jadi putih terang jika dipilih, agak pudar jika tidak
               color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
             ),
             child: Text(title),
@@ -218,98 +213,117 @@ class _ActivityPageState extends State<ActivityPage> {
       statusColor = const Color(0xFFFF5656); 
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDCF0E9).withOpacity(0.3), 
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF0DB662), width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: AssetImage('assets/images/design1.png'), 
-                fit: BoxFit.cover,
-              ),
-              color: Colors.grey[300],
-            ),
-          ),
-          const SizedBox(width: 12),
+    // UPDATE: Bungkus dengan GestureDetector untuk navigasi ke BillsPage
+    return GestureDetector(
+      onTap: () {
+        // Membuat objek grup sementara berdasarkan judul tagihan
+        // Agar BillsPage tahu menampilkan header grup apa
+        final dummyGroup = GroupItem(
+          name: data['title'], 
+          category: 'Lainnya',
+          members:['Saya', 'Teman A', 'Teman B'] // Angka dummy
+        );
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data['title'],
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF44444C),
-                  ),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BillsPage(group: dummyGroup),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDCF0E9).withOpacity(0.3), 
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF0DB662), width: 1),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/design1.png'), 
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Description: ${data['desc']}',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
-                    color: Colors.grey,
+                color: Colors.grey[300],
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['title'],
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF44444C),
+                    ),
                   ),
-                ),
-                RichText(
-                  text: TextSpan(
+                  const SizedBox(height: 4),
+                  Text(
+                    'Description: ${data['desc']}',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
                       color: Colors.grey,
                     ),
-                    children: [
-                      const TextSpan(text: 'Status: '),
-                      TextSpan(
-                        text: data['status'],
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Total : ${data['amount']}',
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Colors.grey,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Status: '),
+                        TextSpan(
+                          text: data['status'],
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Total : ${data['amount']}',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF44444C),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            if (_selectedTab == 1 && data['date'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 40), 
+                child: Text(
+                  data['date'],
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
                     color: Color(0xFF44444C),
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          if (_selectedTab == 1 && data['date'] != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 40), 
-              child: Text(
-                data['date'],
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 10,
-                  color: Color(0xFF44444C),
-                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

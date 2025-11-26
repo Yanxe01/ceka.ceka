@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/group_data.dart'; // Import model data
 import '../components/invite_member_modal.dart'; // Import modal invite
+import 'bills_page.dart'; // Import halaman Bills
+import 'add_expense_page.dart'; // Import halaman Add Expense
 
 class GroupDetailPage extends StatelessWidget {
   final GroupItem group; // Menerima data grup yang diklik
@@ -11,12 +13,18 @@ class GroupDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // Floating Action Button "Add Expense" di bawah kanan
+      // Floating Action Button "Add Expense"
       floatingActionButton: SizedBox(
         height: 45,
         child: FloatingActionButton.extended(
           onPressed: () {
-            // Logika tambah pengeluaran (nanti)
+            // Navigasi ke AddExpensePage
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddExpensePage(group: group),
+              ),
+            );
           },
           backgroundColor: const Color(0xFF087B42),
           icon: const Icon(Icons.receipt_long, color: Colors.white),
@@ -45,16 +53,16 @@ class GroupDetailPage extends StatelessWidget {
                 
                 // Dummy Data List
                 _buildMonthSection("August 2025", [
-                  _buildExpenseItem("12", "Aug", "Listrik", "You paid for yourself", true),
-                  _buildExpenseItem("12", "Aug", "Uang Kontrakan", "You paid for yourself", true),
+                  _buildExpenseItem(context, "12", "Aug", "Listrik", "You paid for yourself", true),
+                  _buildExpenseItem(context, "12", "Aug", "Uang Kontrakan", "You paid for yourself", true),
                 ]),
                 
                 _buildMonthSection("September 2025", [
-                  _buildExpenseItem("12", "Sept", "Listrik", "Ikrar paid for you", false),
+                  _buildExpenseItem(context, "12", "Sept", "Listrik", "Ikrar paid for you", false),
                 ]),
 
                 _buildMonthSection("October 2025", [
-                  _buildExpenseItem("12", "Oct", "Listrik", "You haven't paid", false, isAlert: true),
+                  _buildExpenseItem(context, "12", "Oct", "Listrik", "You haven't paid", false, isAlert: true),
                 ]),
                 
                 // Space untuk FAB agar tidak menutupi list paling bawah
@@ -77,9 +85,7 @@ class GroupDetailPage extends StatelessWidget {
         bottom: 30,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF087B42),
-        // Opsional: Tambahkan background image abstract jika ada assetnya
-        // image: DecorationImage(...)
+        color: Color(0xFF087B42), // Warna Background Hijau Header
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +116,7 @@ class GroupDetailPage extends StatelessWidget {
 
           // Nama Grup
           Text(
-            group.name, // Mengambil nama grup dinamis
+            group.name, 
             style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 32,
@@ -163,7 +169,7 @@ class GroupDetailPage extends StatelessWidget {
                     const Icon(Icons.people, size: 18, color: Colors.white),
                     const SizedBox(width: 4),
                     Text(
-                      '${group.members} People',
+                      '${group.memberCount} People', // Menggunakan getter memberCount
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         color: Colors.white,
@@ -218,75 +224,88 @@ class GroupDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildExpenseItem(String day, String monthShort, String title, String subtitle, bool isPaid, {bool isAlert = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          // Tanggal
-          Column(
+  Widget _buildExpenseItem(BuildContext context, String day, String monthShort, String title, String subtitle, bool isPaid, {bool isAlert = false}) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BillsPage(group: group),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          color: Colors.transparent, 
+          child: Row(
             children: [
-              Text(
-                monthShort,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF44444C),
-                ),
+              // Tanggal
+              Column(
+                children: [
+                  Text(
+                    monthShort,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF44444C),
+                    ),
+                  ),
+                  Text(
+                    day,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF44444C),
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                day,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF44444C),
+              const SizedBox(width: 16),
+
+              // Icon Box
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0DB662),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.receipt_long, color: Colors.white),
+              ),
+              const SizedBox(width: 16),
+
+              // Title & Subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF44444C),
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: isAlert ? const Color(0xFFFF5656) : Colors.grey, 
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 16),
-
-          // Icon Box
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0DB662),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.receipt_long, color: Colors.white),
-          ),
-          const SizedBox(width: 16),
-
-          // Title & Subtitle
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF44444C),
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: isAlert ? const Color(0xFFFF5656) : Colors.grey, // Merah jika warning
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -12,15 +12,13 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsPageState extends State<GroupsPage> {
-  // CATATAN: Kita tidak butuh _allGroups (dummy data) lagi di sini
-  // karena kita sudah pakai globalGroupList dari group_data.dart
-
+  
   void _showFilterModal() {
     showDialog(
       context: context,
       builder: (context) => GroupFilterModal(
         onApply: (selectedCategory) {
-          // Disini logika filtering data nanti diterapkan
+          // Logika filtering
           print("Filter diterapkan: $selectedCategory");
         },
       ),
@@ -111,42 +109,34 @@ class _GroupsPageState extends State<GroupsPage> {
 
             const SizedBox(height: 30),
 
-            // List Groups (Updated)
+            // List Groups
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                // PERUBAHAN 1: Menggunakan panjang data dari globalGroupList
                 itemCount: globalGroupList.length,
                 separatorBuilder: (context, index) => const SizedBox(height: 20),
                 itemBuilder: (context, index) {
-                  // PERUBAHAN 2: Mengambil data object GroupItem
                   final group = globalGroupList[index];
                   return _buildGroupTile(group);
                 },
               ),
             ),
 
-            // Tombol Buat Grup Baru (Updated)
+            // Tombol Buat Grup Baru
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
               child: SizedBox(
                 width: 200,
                 height: 45,
                 child: OutlinedButton(
-                  // PERUBAHAN 3: Logika Navigasi & Refresh
                   onPressed: () async {
-                    // 1. Pindah ke halaman AddGroupPage dan tunggu hasilnya
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const AddGroupPage()),
                     );
 
-                    // 2. Jika hasilnya 'true' (berarti user menekan Selesai), refresh halaman
                     if (result == true) {
-                      setState(() {
-                        // setState kosong ini memicu build ulang, 
-                        // sehingga List mengambil data terbaru dari globalGroupList
-                      });
+                      setState(() {});
                     }
                   },
                   style: OutlinedButton.styleFrom(
@@ -174,23 +164,22 @@ class _GroupsPageState extends State<GroupsPage> {
     );
   }
 
-  // PERUBAHAN 4: Parameter diubah dari Map ke GroupItem
- Widget _buildGroupTile(GroupItem group) {
-    // Bungkus dengan GestureDetector untuk navigasi ke Detail
+  // --- WIDGET GROUP TILE YANG SUDAH DIPERBAIKI ---
+  Widget _buildGroupTile(GroupItem group) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => GroupDetailPage(group: group), // Kirim data grup
+            builder: (context) => GroupDetailPage(group: group),
           ),
         );
       },
       child: Container(
-        color: Colors.transparent, // Agar area tap luas dan responsif
+        color: Colors.transparent, 
         child: Row(
           children: [
-            // Group Image
+            // 1. Group Image
             Container(
               width: 50,
               height: 50,
@@ -205,7 +194,7 @@ class _GroupsPageState extends State<GroupsPage> {
             ),
             const SizedBox(width: 16),
             
-            // Group Name
+            // 2. Nama Grup (Expanded agar mendorong member count ke kanan)
             Expanded(
               child: Text(
                 group.name,
@@ -215,11 +204,15 @@ class _GroupsPageState extends State<GroupsPage> {
                   fontWeight: FontWeight.w400,
                   color: Color(0xFF44444C),
                 ),
+                overflow: TextOverflow.ellipsis, // Agar teks panjang tidak error
               ),
             ),
             
-            // Member Count
+            const SizedBox(width: 8),
+
+            // 3. Jumlah Member (Di sebelah kanan)
             Row(
+              mainAxisSize: MainAxisSize.min, // Agar row ini hanya selebar isinya
               children: [
                 const Icon(
                   Icons.person_outline,
@@ -228,10 +221,10 @@ class _GroupsPageState extends State<GroupsPage> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  group.members.toString(),
+                  '${group.members.length} People', // Menggunakan .length
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF0DB662),
                   ),

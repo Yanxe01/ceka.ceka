@@ -26,7 +26,7 @@ class _AddGroupPageState extends State<AddGroupPage> {
     final newGroup = GroupItem(
       name: _nameController.text,
       category: _selectedCategory,
-      members: 1, // Default member 1 (kamu sendiri)
+      members: ['saya'], // Default member 1 (kamu sendiri)
       image: 'assets/images/design1.png', // Placeholder
     );
 

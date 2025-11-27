@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/group_data.dart'; // Import model data
-import '../components/invite_member_modal.dart'; // Import modal invite
+import '../models/group_model.dart'; // GANTI: Pakai GroupModel (Data Asli)
+import '../components/invite_member_modal.dart';
+import 'add_expense_page.dart'; // PENTING: Import halaman AddExpense
 
 class GroupDetailPage extends StatelessWidget {
-  final GroupItem group; // Menerima data grup yang diklik
+  final GroupModel group; // GANTI: Menerima GroupModel
 
   const GroupDetailPage({super.key, required this.group});
 
@@ -11,12 +12,18 @@ class GroupDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // Floating Action Button "Add Expense" di bawah kanan
+      // FAB "Add Expense"
       floatingActionButton: SizedBox(
         height: 45,
         child: FloatingActionButton.extended(
           onPressed: () {
-            // Logika tambah pengeluaran (nanti)
+            // FIX: Arahkan ke halaman AddExpensePage
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddExpensePage(group: group),
+              ),
+            );
           },
           backgroundColor: const Color(0xFF087B42),
           icon: const Icon(Icons.receipt_long, color: Colors.white),
@@ -35,7 +42,7 @@ class GroupDetailPage extends StatelessWidget {
           // --- BAGIAN HEADER HIJAU ---
           _buildHeader(context),
 
-          // --- BAGIAN LIST EXPENSE (SCROLLABLE) ---
+          // --- BAGIAN LIST EXPENSE (Masih Dummy dulu untuk tampilan) ---
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -43,21 +50,13 @@ class GroupDetailPage extends StatelessWidget {
                 _buildWelcomeMessage(),
                 const SizedBox(height: 30),
                 
-                // Dummy Data List
+                // Nanti bagian ini kita ganti dengan StreamBuilder dari Firebase
                 _buildMonthSection("August 2025", [
                   _buildExpenseItem("12", "Aug", "Listrik", "You paid for yourself", true),
                   _buildExpenseItem("12", "Aug", "Uang Kontrakan", "You paid for yourself", true),
                 ]),
                 
-                _buildMonthSection("September 2025", [
-                  _buildExpenseItem("12", "Sept", "Listrik", "Ikrar paid for you", false),
-                ]),
-
-                _buildMonthSection("October 2025", [
-                  _buildExpenseItem("12", "Oct", "Listrik", "You haven't paid", false, isAlert: true),
-                ]),
-                
-                // Space untuk FAB agar tidak menutupi list paling bawah
+                // Space agar tidak ketutup FAB
                 const SizedBox(height: 80), 
               ],
             ),
@@ -78,8 +77,6 @@ class GroupDetailPage extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: Color(0xFF087B42),
-        // Opsional: Tambahkan background image abstract jika ada assetnya
-        // image: DecorationImage(...)
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +107,7 @@ class GroupDetailPage extends StatelessWidget {
 
           // Nama Grup
           Text(
-            group.name, // Mengambil nama grup dinamis
+            group.name, // Mengambil nama dari GroupModel
             style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 32,
@@ -123,7 +120,6 @@ class GroupDetailPage extends StatelessWidget {
           // Tombol Add Members & Info Member
           Row(
             children: [
-              // Tombol Add Members (Memicu Modal)
               ElevatedButton.icon(
                 onPressed: () {
                   showDialog(
@@ -132,7 +128,7 @@ class GroupDetailPage extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0DB662), // Hijau lebih terang
+                  backgroundColor: const Color(0xFF0DB662),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -162,8 +158,9 @@ class GroupDetailPage extends StatelessWidget {
                   children: [
                     const Icon(Icons.people, size: 18, color: Colors.white),
                     const SizedBox(width: 4),
+                    // UPDATE: Hitung jumlah member dari List
                     Text(
-                      '${group.members} People',
+                      '${group.members.length} People', 
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         color: Colors.white,
@@ -179,6 +176,8 @@ class GroupDetailPage extends StatelessWidget {
       ),
     );
   }
+
+  // --- Widget helper di bawah tetap sama (hanya styling) ---
 
   Widget _buildWelcomeMessage() {
     return Builder(
@@ -228,7 +227,6 @@ class GroupDetailPage extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 16),
         child: Row(
           children: [
-            // Tanggal
             Column(
               children: [
                 Text(
@@ -252,8 +250,6 @@ class GroupDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(width: 16),
-
-            // Icon Box
             Container(
               width: 48,
               height: 48,
@@ -264,8 +260,6 @@ class GroupDetailPage extends StatelessWidget {
               child: const Icon(Icons.receipt_long, color: Colors.white),
             ),
             const SizedBox(width: 16),
-
-            // Title & Subtitle
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

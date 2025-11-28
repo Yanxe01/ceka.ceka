@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2
   provider: ^6.1.1
+  flutter_dotenv: ^5.1.0
 
   # Firebase dependencies
   firebase_core: ^3.8.1
@@ -70,6 +71,7 @@ flutter:
   # Assets untuk gambar
   assets:
     - assets/images/
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

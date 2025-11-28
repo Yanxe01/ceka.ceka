@@ -46,3 +46,18 @@ app.*.map.json
 
 #nul
 nul
+
+# Environment variables
+.env
+*.env
+!.env.example
+
+# Firebase sensitive files
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+.firebase/
+
+# API Keys and Secrets
+**/google-services.json
+**/GoogleService-Info.plist

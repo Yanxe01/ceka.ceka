@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'config/firebase_config.dart';
 import 'pages/login_page.dart';
 import 'providers/theme_provider.dart';
@@ -8,9 +9,10 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
   // Inisialisasi Firebase
-  // PENTING: Untuk Android, google-services.json akan handle config otomatis
-  // Kita tetap perlu panggil initializeApp, tapi tanpa options untuk Android
   await FirebaseConfig.initialize();
 
   runApp(

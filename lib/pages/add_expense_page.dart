@@ -58,7 +58,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
   // Fungsi Simpan ke Backend
   void _saveExpense() async {
     if (_titleController.text.isEmpty || _amountController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon isi deskripsi dan nominal")));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon isi deskripsi dan nominal")));
+      }
+      return;
+    }
+
+    if (_selectedMemberIds.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon pilih minimal 1 orang")));
+      }
       return;
     }
 
@@ -82,9 +91,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
         splitDetails: _finalSplitAmounts,
         splitType: _splitType,
       );
-      if (mounted) Navigator.pop(context); // Kembali ke halaman sebelumnya
+      if (mounted) {
+        Navigator.pop(context); // Kembali ke halaman sebelumnya
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Expense berhasil ditambahkan!")));
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

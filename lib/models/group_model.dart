@@ -24,6 +24,20 @@ class GroupModel {
   // Dari Firestore ke Object
   factory GroupModel.fromDocumentSnapshot(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Handle createdAt yang bisa null atau belum tersedia
+    DateTime parsedDate;
+    try {
+      if (data['createdAt'] != null) {
+        parsedDate = (data['createdAt'] as Timestamp).toDate();
+      } else {
+        parsedDate = DateTime.now(); // Default ke sekarang jika null
+      }
+    } catch (e) {
+      print("Error parsing createdAt: $e");
+      parsedDate = DateTime.now();
+    }
+
     return GroupModel(
       id: doc.id,
       name: data['name'] ?? '',
@@ -31,7 +45,7 @@ class GroupModel {
       adminId: data['adminId'] ?? '',
       members: List<String>.from(data['members'] ?? []),
       inviteCode: data['inviteCode'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: parsedDate,
       image: data['image'],
     );
   }

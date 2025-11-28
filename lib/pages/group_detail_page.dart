@@ -17,13 +17,24 @@ class GroupDetailPage extends StatelessWidget {
         height: 45,
         child: FloatingActionButton.extended(
           onPressed: () {
-            // FIX: Arahkan ke halaman AddExpensePage
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddExpensePage(group: group),
-              ),
-            );
+            print("DEBUG: Add Expense button clicked!");
+            print("DEBUG: Group ID: ${group.id}");
+            print("DEBUG: Group Name: ${group.name}");
+            print("DEBUG: Group Members: ${group.members.length}");
+
+            try {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddExpensePage(group: group),
+                ),
+              );
+            } catch (e) {
+              print("DEBUG: Navigation Error: $e");
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Error navigasi: $e")),
+              );
+            }
           },
           backgroundColor: const Color(0xFF087B42),
           icon: const Icon(Icons.receipt_long, color: Colors.white),

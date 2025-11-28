@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/group_data.dart'; // Pastikan import file data yang baru dibuat
+import '../services/services.dart';
 
 class AddGroupPage extends StatefulWidget {
   const AddGroupPage({super.key});
@@ -11,6 +11,7 @@ class AddGroupPage extends StatefulWidget {
 class _AddGroupPageState extends State<AddGroupPage> {
   final _nameController = TextEditingController();
   String _selectedCategory = 'Kontrakan'; // Default
+  bool _isLoading = false;
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Kontrakan', 'icon': Icons.home_outlined},
@@ -19,24 +20,45 @@ class _AddGroupPageState extends State<AddGroupPage> {
     {'name': 'Lainnya', 'icon': Icons.list_alt_outlined},
   ];
 
-  void _saveGroup() {
-    if (_nameController.text.isEmpty) return;
+  void _saveGroup() async {
+    if (_nameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mohon isi nama grup")),
+      );
+      return;
+    }
 
-    // 1. Buat object grup baru
-    final newGroup = GroupItem(
-      name: _nameController.text,
-      category: _selectedCategory,
-      members: 1, // Default member 1 (kamu sendiri)
-      image: 'assets/images/design1.png', // Placeholder
-    );
+    print("DEBUG: Saving group...");
+    print("DEBUG: Group name: ${_nameController.text}");
+    print("DEBUG: Category: $_selectedCategory");
 
-    // 2. Masukkan ke Global List
-    setState(() {
-      globalGroupList.add(newGroup);
-    });
+    setState(() => _isLoading = true);
 
-    // 3. Kembali ke halaman sebelumnya dgn pesan sukses
-    Navigator.pop(context, true);
+    try {
+      // Simpan ke Firebase
+      await GroupService().createGroup(
+        name: _nameController.text,
+        category: _selectedCategory,
+      );
+
+      print("DEBUG: Group saved successfully!");
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Grup berhasil dibuat!")),
+        );
+      }
+    } catch (e) {
+      print("DEBUG: Error saving group: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -75,16 +97,25 @@ class _AddGroupPageState extends State<AddGroupPage> {
                     ),
                   ),
                   TextButton(
-                    onPressed: _saveGroup,
-                    child: const Text(
-                      'Selesai',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        color: Color(0xFF0DB662), // Hijau
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    onPressed: _isLoading ? null : _saveGroup,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0DB662)),
+                            ),
+                          )
+                        : const Text(
+                            'Selesai',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: Color(0xFF0DB662), // Hijau
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ],
               ),

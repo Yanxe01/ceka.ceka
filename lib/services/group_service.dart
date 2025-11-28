@@ -24,6 +24,10 @@ class GroupService {
     required String category,
   }) async {
     final user = _auth.currentUser;
+
+    print("DEBUG GroupService: Current user: ${user?.uid ?? 'NULL'}");
+    print("DEBUG GroupService: Current user email: ${user?.email ?? 'NULL'}");
+
     if (user == null) throw Exception("User belum login");
 
     String code = _generateInviteCode();
@@ -39,23 +43,51 @@ class GroupService {
       'image': null, // Nanti bisa diupdate fitur upload gambar
     };
 
-    await _groups.add(groupData);
+    print("DEBUG GroupService: Group data to save: $groupData");
+    print("DEBUG GroupService: Attempting to save to Firestore...");
+
+    try {
+      final docRef = await _groups.add(groupData);
+      print("DEBUG GroupService: Group saved with ID: ${docRef.id}");
+    } catch (e) {
+      print("DEBUG GroupService: Error saving to Firestore: $e");
+      rethrow;
+    }
   }
 
   // --- 2. GET USER GROUPS (REALTIME) ---
   // Mengambil daftar grup di mana user tersebut menjadi member
   Stream<List<GroupModel>> getUserGroups() {
     final user = _auth.currentUser;
-    if (user == null) return Stream.value([]);
+
+    print("DEBUG getUserGroups: Current user: ${user?.uid ?? 'NULL'}");
+
+    if (user == null) {
+      print("DEBUG getUserGroups: User is null, returning empty stream");
+      return Stream.value([]);
+    }
+
+    print("DEBUG getUserGroups: Listening to groups for user: ${user.uid}");
 
     return _groups
         .where('members', arrayContains: user.uid)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => GroupModel.fromDocumentSnapshot(doc))
+      print("DEBUG getUserGroups: Received ${snapshot.docs.length} groups");
+
+      // Sort di client side untuk menghindari composite index
+      final groups = snapshot.docs
+          .map((doc) {
+            print("DEBUG getUserGroups: Processing group doc: ${doc.id}");
+            return GroupModel.fromDocumentSnapshot(doc);
+          })
           .toList();
+
+      // Sort berdasarkan createdAt descending (terbaru di atas)
+      groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      print("DEBUG getUserGroups: Returning ${groups.length} groups");
+      return groups;
     });
   }
 

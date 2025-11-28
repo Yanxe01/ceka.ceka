@@ -1,0 +1,31 @@
+Launching lib\main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                           1,796ms
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...        1,130ms
+D/FlutterJNI( 5790): Beginning load of flutter...
+D/FlutterJNI( 5790): flutter (null) was loaded normally!
+I/flutter ( 5790): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+Syncing files to device sdk gphone64 x86 64...                  
+I/WindowExtensionsImpl( 5790): Initializing Window Extensions, vendor API level=9, activity embedding enabled=true
+I/mobile.cekaceka( 5790): Compiler allocated 5042KB to compile void android.view.ViewRootImpl.performTraversals()
+Syncing files to device sdk gphone64 x86 64...                      40ms
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:49980/zJ-EWkm7sPM=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:9101?uri=http://127.0.0.1:49980/zJ-EWkm7sPM=/
+D/WindowLayoutComponentImpl( 5790): Register WindowLayoutInfoListener on Context=com.mobile.cekaceka.MainActivity@8903163, of which baseContext=android.app.ContextImpl@5668a96
+D/FirebaseAuth( 5790): Notifying id token listeners about user ( QpvaOREKqlgAiKKKyMVfBq3sox73 ).
+I/Choreographer( 5790): Skipped 30 frames!  The application may be doing too much work on its main thread.
+D/InsetsController( 5790): hide(ime(), fromIme=false)
+I/ImeTracker( 5790): com.mobile.cekaceka:adbcd401: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+D/ProfileInstaller( 5790): Installing profile for com.mobile.cekaceka
+I/mobile.cekaceka( 5790): AssetManager2(0x72785025d0f8) locale list changing from [] to [en-US]
+W/WindowOnBackDispatcher( 5790): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@c6f37b7
+Lost connection to device.

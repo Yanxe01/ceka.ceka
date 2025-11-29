@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'payment_draft_page.dart'; 
 
 // NAMA CLASS SUDAH DIGANTI JADI ActivityPage
 class ActivityPage extends StatefulWidget {
@@ -207,67 +208,74 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
+ // Copy kode ini untuk menggantikan _buildActivityCard yang lama
   Widget _buildActivityCard(Map<String, dynamic> data) {
     Color statusColor;
-    
+
     if (data['status'].toString().contains('Paid')) {
-      statusColor = const Color(0xFF0DB662); 
+      statusColor = const Color(0xFF0DB662);
     } else if (data['isWarning'] == true) {
-      statusColor = const Color(0xFFFFA000); 
+      statusColor = const Color(0xFFFFA000);
     } else {
-      statusColor = const Color(0xFFFF5656); 
+      statusColor = const Color(0xFFFF5656);
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF0DB662), width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: AssetImage('assets/images/design1.png'), 
-                fit: BoxFit.cover,
-              ),
-              color: Colors.grey[300],
+    return GestureDetector(
+      onTap: () {
+        // --- LOGIKA PENTING DI SINI ---
+        // Kita cek 2 hal:
+        // 1. Apakah user sedang di tab Bills (_selectedTab == 0)?
+        // 2. Apakah statusnya BUKAN Paid (belum lunas)?
+        // Jika salah satu TIDAK terpenuhi, maka tidak akan terjadi apa-apa (History gak bisa diklik).
+        
+        if (_selectedTab == 0 && !data['status'].toString().contains('Paid')) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentDraftPage(billTitle: data['title']),
             ),
-          ),
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data['title'],
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardTheme.color,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF0DB662), width: 1),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/design1.png'),
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Description: ${data['desc']}',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[400]
-                        : Colors.grey,
+                color: Colors.grey[300],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['title'],
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
                   ),
-                ),
-                RichText(
-                  text: TextSpan(
+                  const SizedBox(height: 4),
+                  Text(
+                    'Description: ${data['desc']}',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
@@ -275,45 +283,55 @@ class _ActivityPageState extends State<ActivityPage> {
                           ? Colors.grey[400]
                           : Colors.grey,
                     ),
-                    children: [
-                      const TextSpan(text: 'Status: '),
-                      TextSpan(
-                        text: data['status'],
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Total : ${data['amount']}',
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Status: '),
+                        TextSpan(
+                          text: data['status'],
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Total : ${data['amount']}',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_selectedTab == 1 && data['date'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 40),
+                child: Text(
+                  data['date'],
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
                     color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          if (_selectedTab == 1 && data['date'] != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 40),
-              child: Text(
-                data['date'],
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 10,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

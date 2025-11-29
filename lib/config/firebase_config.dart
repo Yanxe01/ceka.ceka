@@ -24,8 +24,8 @@ class FirebaseConfig {
   // Dapatkan dari Firebase Console > Project Settings > Your apps
 
   static const FirebaseOptions webOptions = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
+    apiKey: 'AIzaSyBVKmv1MXJuur3hB6yOYah3xx3syKh1OnA',
+    appId: '1:727120428216:android:ba0585e37c964b0c40c84d',
     messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
     projectId: 'YOUR_PROJECT_ID',
     authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
@@ -33,7 +33,7 @@ class FirebaseConfig {
   );
 
   static const FirebaseOptions androidOptions = FirebaseOptions(
-    apiKey: '',
+    apiKey: 'AIzaSyBVKmv1MXJuur3hB6yOYah3xx3syKh1OnA',
     appId: '1:727120428216:android:ba0585e37c964b0c40c84d',
     messagingSenderId: '727120428216',
     projectId: 'tugasmobile-59071',

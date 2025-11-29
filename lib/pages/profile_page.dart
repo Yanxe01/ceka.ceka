@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'notification_settings_page.dart';
 import 'login_page.dart'; // Import login page untuk navigasi logout
 import '../providers/theme_provider.dart';
+import 'help_center_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -317,7 +318,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   // SECTION 3
                   _buildSectionTitle("Bantuan"),
-                  _buildMenuItem(Icons.help_outline_rounded, "Pusat Bantuan (FAQ)"),
+                  _buildMenuItem(
+                     Icons.help_outline_rounded, 
+                     "Pusat Bantuan (FAQ)",
+                     onTap: () {
+                       Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HelpCenterPage()),
+                      );
+                     },
+                    ),
                   _buildMenuItem(
                     Icons.headset_mic_outlined, 
                     "Hubungi Kami",

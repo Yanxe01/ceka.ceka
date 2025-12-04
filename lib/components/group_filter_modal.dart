@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class GroupFilterModal extends StatefulWidget {
   final Function(String?) onApply;
+  final String? initialCategory; // Kategori yang sudah terpilih sebelumnya
 
-  const GroupFilterModal({super.key, required this.onApply});
+  const GroupFilterModal({
+    super.key,
+    required this.onApply,
+    this.initialCategory,
+  });
 
   @override
   State<GroupFilterModal> createState() => _GroupFilterModalState();
@@ -12,6 +17,13 @@ class GroupFilterModal extends StatefulWidget {
 class _GroupFilterModalState extends State<GroupFilterModal> {
   // Menyimpan filter yang sedang dipilih
   String? _selectedFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set initial value dari kategori yang sudah dipilih
+    _selectedFilter = widget.initialCategory;
+  }
 
   final List<Map<String, dynamic>> _filterOptions = [
     {'label': 'Kontrakan', 'icon': Icons.home_outlined},
@@ -101,10 +113,9 @@ class _GroupFilterModalState extends State<GroupFilterModal> {
                   height: 45,
                   child: OutlinedButton(
                     onPressed: () {
-                      setState(() {
-                        _selectedFilter = null;
-                      });
-                      Navigator.pop(context); // Atau reset filter
+                      // Reset filter dan terapkan
+                      widget.onApply(null);
+                      Navigator.pop(context);
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFE0E0E0)),
@@ -113,10 +124,10 @@ class _GroupFilterModalState extends State<GroupFilterModal> {
                       ),
                     ),
                     child: const Text(
-                      'Batalkan',
+                      'Reset Filter',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        color: Color(0xFFFF5656), // Warna merah seperti di gambar
+                        color: Color(0xFFFF5656),
                         fontWeight: FontWeight.w500,
                       ),
                     ),

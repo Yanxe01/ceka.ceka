@@ -19,9 +19,10 @@ class GroupService {
   }
 
   // --- 1. CREATE GROUP ---
-  Future<void> createGroup({
+  Future<String> createGroup({
     required String name,
     required String category,
+    String? imageUrl,
   }) async {
     final user = _auth.currentUser;
 
@@ -40,7 +41,7 @@ class GroupService {
       'members': [user.uid], // Pembuat otomatis jadi member
       'inviteCode': code,
       'createdAt': FieldValue.serverTimestamp(),
-      'image': null, // Nanti bisa diupdate fitur upload gambar
+      'image': imageUrl,
     };
 
     print("DEBUG GroupService: Group data to save: $groupData");
@@ -49,8 +50,22 @@ class GroupService {
     try {
       final docRef = await _groups.add(groupData);
       print("DEBUG GroupService: Group saved with ID: ${docRef.id}");
+      return docRef.id; // Return group ID for image upload
     } catch (e) {
       print("DEBUG GroupService: Error saving to Firestore: $e");
+      rethrow;
+    }
+  }
+
+  // --- UPDATE GROUP IMAGE ---
+  Future<void> updateGroupImage(String groupId, String imageUrl) async {
+    try {
+      await _groups.doc(groupId).update({
+        'image': imageUrl,
+      });
+      print("DEBUG GroupService: Group image updated for: $groupId");
+    } catch (e) {
+      print("DEBUG GroupService: Error updating group image: $e");
       rethrow;
     }
   }
@@ -120,5 +135,98 @@ class GroupService {
     });
 
     return true; // Berhasil join
+  }
+
+  // --- 4. LEAVE GROUP ---
+  /// User meninggalkan grup
+  Future<void> leaveGroup(String groupId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception("User belum login");
+
+    try {
+      print("DEBUG: LeaveGroup - User ${user.uid} leaving group $groupId");
+      
+      // Remove user dari members array
+      await _groups.doc(groupId).update({
+        'members': FieldValue.arrayRemove([user.uid])
+      });
+      
+      print("DEBUG: LeaveGroup - Successfully removed user from group");
+    } catch (e) {
+      print("DEBUG: LeaveGroup - Error: $e");
+      rethrow;
+    }
+  }
+
+  // --- 5. DELETE GROUP ---
+  /// Admin menghapus grup (hanya untuk admin)
+  Future<void> deleteGroup(String groupId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception("User belum login");
+
+    try {
+      print("DEBUG: DeleteGroup - User ${user.uid} attempting to delete group $groupId");
+      
+      // Cek apakah user adalah admin
+      final doc = await _groups.doc(groupId).get();
+      if (!doc.exists) throw Exception("Group tidak ditemukan");
+      
+      final data = doc.data() as Map<String, dynamic>;
+      final adminId = data['adminId'] as String?;
+      
+      if (adminId != user.uid) {
+        throw Exception("Hanya admin yang bisa menghapus grup");
+      }
+      
+      // Delete group document
+      await _groups.doc(groupId).delete();
+      
+      // Delete semua expenses untuk group ini
+      final expensesQuery = await _firestore
+          .collection('expenses')
+          .where('groupId', isEqualTo: groupId)
+          .get();
+      
+      for (var expenseDoc in expensesQuery.docs) {
+        await expenseDoc.reference.delete();
+      }
+      
+      print("DEBUG: DeleteGroup - Successfully deleted group and all expenses");
+    } catch (e) {
+      print("DEBUG: DeleteGroup - Error: $e");
+      rethrow;
+    }
+  }
+
+  // --- 6. REMOVE MEMBER FROM GROUP ---
+  /// Admin menghapus member dari grup
+  Future<void> removeMember(String groupId, String memberId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception("User belum login");
+
+    try {
+      print("DEBUG: RemoveMember - User ${user.uid} removing $memberId from group $groupId");
+      
+      // Cek apakah user adalah admin
+      final doc = await _groups.doc(groupId).get();
+      if (!doc.exists) throw Exception("Group tidak ditemukan");
+      
+      final data = doc.data() as Map<String, dynamic>;
+      final adminId = data['adminId'] as String?;
+      
+      if (adminId != user.uid) {
+        throw Exception("Hanya admin yang bisa menghapus member");
+      }
+      
+      // Remove member dari array
+      await _groups.doc(groupId).update({
+        'members': FieldValue.arrayRemove([memberId])
+      });
+      
+      print("DEBUG: RemoveMember - Successfully removed member from group");
+    } catch (e) {
+      print("DEBUG: RemoveMember - Error: $e");
+      rethrow;
+    }
   }
 }

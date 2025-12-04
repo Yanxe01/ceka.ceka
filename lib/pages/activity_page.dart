@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'payment_draft_page.dart'; 
+import 'payment_page.dart';
+import '../services/payment_service.dart';
+import 'package:intl/intl.dart';
 
-// NAMA CLASS SUDAH DIGANTI JADI ActivityPage
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
 
@@ -11,58 +12,31 @@ class ActivityPage extends StatefulWidget {
 
 class _ActivityPageState extends State<ActivityPage> {
   // 0 = Bills, 1 = History
-  int _selectedTab = 0; 
+  int _selectedTab = 0;
 
-  // Dummy Data untuk Bills (Tagihan Belum Lunas/Menunggu)
-  final List<Map<String, dynamic>> _billsData = [
-    {
-      'title': 'Badminton DAP',
-      'desc': 'Uang Lapangan + uang air',
-      'status': 'Waiting for confirmation',
-      'amount': 'Rp. 20.000.00',
-      'isWarning': true, 
-    },
-    {
-      'title': 'DAP A17',
-      'desc': 'Uang Listrik',
-      'status': 'Waiting for confirmation',
-      'amount': 'Rp. 20.000.00',
-      'isWarning': true,
-    },
-    {
-      'title': 'DAP A17',
-      'desc': 'Uang Air',
-      'status': 'Unpaid',
-      'amount': 'Rp. 10.000.00',
-      'isWarning': false, 
-      'isDanger': true,
-    },
-  ];
+  final PaymentService _paymentService = PaymentService();
 
-  // Dummy Data untuk History (Sudah Lunas)
-  final List<Map<String, dynamic>> _historyData = [
-    {
-      'title': 'Badminton DAP',
-      'desc': 'Uang Lapangan + uang air',
-      'status': 'Paid',
-      'amount': 'Rp. 20.000.00',
-      'date': '04-10-2025',
-    },
-    {
-      'title': 'DAP A17',
-      'desc': 'Uang Listrik',
-      'status': 'Paid',
-      'amount': 'Rp. 20.000.00',
-      'date': '04-10-2025',
-    },
-    {
-      'title': 'DAP A17',
-      'desc': 'Uang Air',
-      'status': 'Paid by Irgi',
-      'amount': 'Rp. 10.000.00',
-      'date': '04-10-2025',
-    },
-  ];
+  String _formatCurrency(double value) {
+    return value.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
+  String _formatDate(dynamic date) {
+    try {
+      if (date == null) return '';
+      DateTime dateTime;
+      if (date is DateTime) {
+        dateTime = date;
+      } else {
+        dateTime = date.toDate();
+      }
+      return DateFormat('dd-MM-yyyy').format(dateTime);
+    } catch (e) {
+      return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,18 +49,131 @@ class _ActivityPageState extends State<ActivityPage> {
 
           // LIST CONTENT SECTION
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: _selectedTab == 0 ? _billsData.length : _historyData.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final data = _selectedTab == 0 ? _billsData[index] : _historyData[index];
-                return _buildActivityCard(data);
-              },
-            ),
+            child: _selectedTab == 0
+                ? _buildBillsList()
+                : _buildHistoryList(),
           ),
         ],
       ),
+    );
+  }
+
+  // Build Bills List (Tagihan yang belum dibayar)
+  Widget _buildBillsList() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _paymentService.getUserBills(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 80,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Tidak ada tagihan!",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                Text(
+                  "Semua pembayaran sudah lunas",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final bills = snapshot.data!;
+        return ListView.separated(
+          padding: const EdgeInsets.all(20),
+          itemCount: bills.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            return _buildActivityCard(bills[index], isHistory: false);
+          },
+        );
+      },
+    );
+  }
+
+  // Build History List (Pembayaran yang sudah lunas)
+  Widget _buildHistoryList() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _paymentService.getUserPaymentHistory(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.history,
+                  size: 80,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Belum ada riwayat",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                Text(
+                  "Pembayaran yang sudah lunas akan muncul di sini",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        final history = snapshot.data!;
+        return ListView.separated(
+          padding: const EdgeInsets.all(20),
+          itemCount: history.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            return _buildActivityCard(history[index], isHistory: true);
+          },
+        );
+      },
     );
   }
 
@@ -208,31 +295,34 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
- // Copy kode ini untuk menggantikan _buildActivityCard yang lama
-  Widget _buildActivityCard(Map<String, dynamic> data) {
-    Color statusColor;
+  Widget _buildActivityCard(Map<String, dynamic> data, {required bool isHistory}) {
+    final status = data['status'] ?? (isHistory ? 'paid' : 'unpaid');
 
-    if (data['status'].toString().contains('Paid')) {
+    Color statusColor;
+    String statusText;
+
+    if (isHistory || status == 'paid') {
       statusColor = const Color(0xFF0DB662);
-    } else if (data['isWarning'] == true) {
-      statusColor = const Color(0xFFFFA000);
+      statusText = 'Paid';
     } else {
       statusColor = const Color(0xFFFF5656);
+      statusText = 'Unpaid';
     }
+
+    final amount = data['amount'] is double
+        ? data['amount']
+        : (data['amount'] is int ? data['amount'].toDouble() : 0.0);
+
+    final formattedAmount = _formatCurrency(amount);
 
     return GestureDetector(
       onTap: () {
-        // --- LOGIKA PENTING DI SINI ---
-        // Kita cek 2 hal:
-        // 1. Apakah user sedang di tab Bills (_selectedTab == 0)?
-        // 2. Apakah statusnya BUKAN Paid (belum lunas)?
-        // Jika salah satu TIDAK terpenuhi, maka tidak akan terjadi apa-apa (History gak bisa diklik).
-        
-        if (_selectedTab == 0 && !data['status'].toString().contains('Paid')) {
+        // Hanya bisa klik jika di tab Bills (belum lunas)
+        if (!isHistory) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PaymentDraftPage(billTitle: data['title']),
+              builder: (context) => PaymentPage(bill: data),
             ),
           );
         }
@@ -265,7 +355,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data['title'],
+                    data['title'] ?? 'Untitled',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 14,
@@ -274,16 +364,18 @@ class _ActivityPageState extends State<ActivityPage> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Description: ${data['desc']}',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[400]
-                          : Colors.grey,
+                  if (data['paymentMethod'] != null && isHistory)
+                    Text(
+                      'Metode: ${data['paymentMethod'] == 'cash' ? 'Cash' : data['paymentMethod'] == 'bank_transfer' ? 'Bank Transfer' : 'E-Wallet'}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey,
+                      ),
                     ),
-                  ),
+                  const SizedBox(height: 4),
                   RichText(
                     text: TextSpan(
                       style: TextStyle(
@@ -296,7 +388,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       children: [
                         const TextSpan(text: 'Status: '),
                         TextSpan(
-                          text: data['status'],
+                          text: statusText,
                           style: TextStyle(
                             color: statusColor,
                             fontWeight: FontWeight.w600,
@@ -307,7 +399,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Total : ${data['amount']}',
+                    'Total: Rp $formattedAmount',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,

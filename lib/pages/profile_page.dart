@@ -4,6 +4,11 @@ import 'notification_settings_page.dart';
 import 'login_page.dart'; // Import login page untuk navigasi logout
 import '../providers/theme_provider.dart';
 import 'help_center_page.dart';
+import 'change_password_page.dart';
+import '../services/google_auth_service.dart';
+import '../services/auth_exceptions.dart';
+import '../services/services.dart';
+import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,6 +18,213 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+
+  // --- MODAL GOOGLE ACCOUNT ---
+  void _showGoogleAccountSheet() {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+    final googleAuthService = GoogleAuthService();
+    final isLinked = googleAuthService.isGoogleLinked();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFEAEAEA),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      isLinked ? "Akun Google Terhubung" : "Hubungkan Akun Google",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.grey[400] : Colors.grey,
+                      ),
+                    ),
+                  ),
+                  if (isLinked) ...[
+                    Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.email, color: Colors.blue, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              googleAuthService.getLinkedGoogleEmail() ?? 'Unknown',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: isDark ? Colors.white : const Color(0xFF44444C),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey),
+                    InkWell(
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _handleUnlinkGoogle();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: const Center(
+                          child: Text(
+                            "Putuskan Hubungan",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFFFF5656),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey),
+                    InkWell(
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _handleLinkGoogle();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: Text(
+                            "Hubungkan dengan Google",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: isDark ? Colors.white : const Color(0xFF44444C),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFEAEAEA),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFF5656),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleLinkGoogle() async {
+    try {
+      final googleAuthService = GoogleAuthService();
+      await googleAuthService.linkWithGoogle();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Akun Google berhasil dihubungkan'),
+          backgroundColor: Color(0xFF0DB662),
+        ),
+      );
+
+      // Refresh UI
+      setState(() {});
+    } on AuthException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghubungkan akun: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleUnlinkGoogle() async {
+    try {
+      final googleAuthService = GoogleAuthService();
+      await googleAuthService.unlinkGoogle();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Akun Google berhasil diputuskan'),
+          backgroundColor: Color(0xFF0DB662),
+        ),
+      );
+
+      // Refresh UI
+      setState(() {});
+    } on AuthException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memutuskan hubungan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   // --- MODAL LOGOUT ---
   void _showLogoutDialog() {
@@ -206,69 +418,110 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           children: [
             // --- HEADER HIJAU ---
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 20,
-                bottom: 30,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF087B42),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Avatar
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                      image: const DecorationImage(
-                        // Ganti dengan asset kucing kamu
-                        image: AssetImage('assets/images/design1.png'), 
-                        fit: BoxFit.cover,
+            StreamBuilder(
+              stream: UserService().getCurrentUserDataStream(),
+              builder: (context, snapshot) {
+                final userData = snapshot.data;
+
+                // Default values
+                String displayName = "User";
+                String email = "user@example.com";
+                String? photoURL;
+
+                if (userData != null) {
+                  displayName = userData.displayName ?? userData.email.split('@')[0];
+                  email = userData.email;
+                  photoURL = userData.photoURL;
+                }
+
+                return Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 20,
+                    bottom: 30,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF087B42),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: photoURL != null && photoURL.isNotEmpty
+                              ? Image.network(
+                                  photoURL,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/design1.png',
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                              : Image.asset(
+                                  'assets/images/design1.png',
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      // Nama
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      // Email
+                      Text(
+                        email,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Edit Profil Link
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EditProfilePage(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Edit Profil",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  // Nama
-                  const Text(
-                    "Ian",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  // Email
-                  const Text(
-                    "ianapalah@dap.apalah",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Edit Profil Link
-                  const Text(
-                    "Edit Profil",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      color: Colors.white,
-                      decoration: TextDecoration.underline,
-                      decorationColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             // --- MENU CONTENT ---
@@ -279,8 +532,22 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   // SECTION 1
                   _buildSectionTitle("Akun & Keamanan"),
-                  _buildMenuItem(Icons.lock_outline_rounded, "Ubah Password"),
-                  _buildMenuItem(Icons.g_mobiledata_rounded, "Akun Terkait", isGoogleIcon: true),
+                  _buildMenuItem(
+                    Icons.lock_outline_rounded,
+                    "Ubah Password",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
+                    Icons.g_mobiledata_rounded,
+                    "Akun Terkait",
+                    isGoogleIcon: true,
+                    onTap: _showGoogleAccountSheet,
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -329,11 +596,10 @@ class _ProfilePageState extends State<ProfilePage> {
                      },
                     ),
                   _buildMenuItem(
-                    Icons.headset_mic_outlined, 
+                    Icons.headset_mic_outlined,
                     "Hubungi Kami",
                     onTap: _showContactSheet,
                   ),
-                  _buildMenuItem(Icons.description_outlined, "Syarat & ketentuan"),
 
                   const SizedBox(height: 40),
 

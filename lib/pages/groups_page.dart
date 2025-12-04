@@ -13,15 +13,19 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsPageState extends State<GroupsPage> {
-  // Variable untuk search (filter lokal sederhana)
+  // Variable untuk search dan filter
   String _searchQuery = "";
+  String? _selectedCategory; // Filter berdasarkan kategori
 
   void _showFilterModal() {
     showDialog(
       context: context,
       builder: (context) => GroupFilterModal(
+        initialCategory: _selectedCategory, // Pass kategori yang sudah dipilih
         onApply: (selectedCategory) {
-          // Nanti bisa dikembangkan untuk filter query Firestore
+          setState(() {
+            _selectedCategory = selectedCategory;
+          });
           print("Filter diterapkan: $selectedCategory");
         },
       ),
@@ -104,25 +108,98 @@ class _GroupsPageState extends State<GroupsPage> {
                   InkWell(
                     onTap: _showFilterModal,
                     borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF9747FF).withOpacity(0.1),
-                        border: Border.all(color: const Color(0xFF9747FF), width: 1.5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.tune,
-                        color: Color(0xFF9747FF),
-                      ),
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _selectedCategory != null
+                                ? const Color(0xFF9747FF).withValues(alpha: 0.2)
+                                : const Color(0xFF9747FF).withValues(alpha: 0.1),
+                            border: Border.all(color: const Color(0xFF9747FF), width: 1.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.tune,
+                            color: Color(0xFF9747FF),
+                          ),
+                        ),
+                        // Badge indicator jika filter aktif
+                        if (_selectedCategory != null)
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF9747FF),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 30),
+            // Filter indicator (jika ada filter aktif)
+            if (_selectedCategory != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Filter: ',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF9747FF).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF9747FF)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _selectedCategory!,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF9747FF),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedCategory = null;
+                              });
+                            },
+                            child: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Color(0xFF9747FF),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            SizedBox(height: _selectedCategory != null ? 12 : 30),
 
             // LIST GROUPS (REALTIME DARI FIREBASE)
             Expanded(
@@ -158,10 +235,17 @@ class _GroupsPageState extends State<GroupsPage> {
 
                   // 4. Ada Data -> Tampilkan List
                   final groups = snapshot.data!;
-                  
-                  // Filter sederhana berdasarkan search query
+
+                  // Filter berdasarkan search query dan category
                   final filteredGroups = groups.where((g) {
-                    return g.name.toLowerCase().contains(_searchQuery);
+                    // Filter by search query
+                    final matchesSearch = g.name.toLowerCase().contains(_searchQuery);
+
+                    // Filter by category (jika ada yang dipilih)
+                    final matchesCategory = _selectedCategory == null ||
+                                           g.category == _selectedCategory;
+
+                    return matchesSearch && matchesCategory;
                   }).toList();
 
                   return ListView.separated(

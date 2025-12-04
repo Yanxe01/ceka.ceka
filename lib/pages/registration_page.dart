@@ -111,9 +111,9 @@ class _RegistrationPageState extends State<RegistrationPage>
           .doc(credential.user!.uid)
           .set({
         'uid': credential.user!.uid,
-        'name': _nameController.text.trim(),
+        'displayName': _nameController.text.trim(),
         'email': _emailController.text.trim(),
-        'phone': _phoneController.text.trim(),
+        'phoneNumber': _phoneController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });

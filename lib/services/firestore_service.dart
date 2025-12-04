@@ -46,17 +46,26 @@ class FirestoreService {
   /// Throws [AuthException] jika terjadi error
   Future<UserModel?> getUser(String uid) async {
     try {
+      print("DEBUG: FirestoreService.getUser() - Fetching user data for uid: $uid");
       DocumentSnapshot doc =
           await _firestore.collection(usersCollection).doc(uid).get();
 
       if (!doc.exists) {
+        print("DEBUG: FirestoreService.getUser() - Document not found for uid: $uid");
         return null;
       }
 
-      return UserModel.fromDocumentSnapshot(doc);
+      print("DEBUG: FirestoreService.getUser() - Document found, parsing user data");
+      print("DEBUG: FirestoreService.getUser() - Document data: ${doc.data()}");
+      final user = UserModel.fromDocumentSnapshot(doc);
+      print("DEBUG: FirestoreService.getUser() - Successfully parsed user: ${user.displayName} (${user.email})");
+      return user;
     } on FirebaseException catch (e) {
+      print("DEBUG: FirestoreService.getUser() - FirebaseException: ${e.code} - ${e.message}");
       throw AuthExceptionHandler.handleFirestoreException(e.code);
     } catch (e) {
+      print("DEBUG: FirestoreService.getUser() - Exception: $e");
+      print("DEBUG: FirestoreService.getUser() - Stack trace: $e");
       throw AuthException(
         code: 'get-user-failed',
         message: 'Gagal mendapatkan data user: ${e.toString()}',

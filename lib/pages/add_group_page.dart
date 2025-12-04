@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../services/services.dart';
 
 class AddGroupPage extends StatefulWidget {
@@ -12,6 +15,8 @@ class _AddGroupPageState extends State<AddGroupPage> {
   final _nameController = TextEditingController();
   String _selectedCategory = 'Kontrakan'; // Default
   bool _isLoading = false;
+  File? _selectedImage;
+  bool _isLoadingImage = false;
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Kontrakan', 'icon': Icons.home_outlined},
@@ -20,10 +25,80 @@ class _AddGroupPageState extends State<AddGroupPage> {
     {'name': 'Lainnya', 'icon': Icons.list_alt_outlined},
   ];
 
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 75,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('Gagal memilih gambar: $e'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<String?> _uploadImage(File imageFile, String groupId) async {
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('group_pictures')
+          .child('$groupId.jpg');
+
+      final uploadTask = await storageRef.putFile(imageFile);
+      final downloadURL = await uploadTask.ref.getDownloadURL();
+
+      return downloadURL;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
   void _saveGroup() async {
     if (_nameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mohon isi nama grup")),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.warning_amber_rounded, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Mohon isi nama grup"),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
       );
       return;
     }
@@ -35,25 +110,73 @@ class _AddGroupPageState extends State<AddGroupPage> {
     setState(() => _isLoading = true);
 
     try {
-      // Simpan ke Firebase
-      await GroupService().createGroup(
+      // Simpan grup terlebih dahulu
+      final groupId = await GroupService().createGroup(
         name: _nameController.text,
         category: _selectedCategory,
       );
+
+      print("DEBUG: Group saved with ID: $groupId");
+
+      // Upload image jika ada
+      if (_selectedImage != null) {
+        print("DEBUG: Uploading group image...");
+        setState(() => _isLoadingImage = true);
+
+        final imageUrl = await _uploadImage(_selectedImage!, groupId);
+
+        if (imageUrl != null) {
+          // Update group dengan URL gambar
+          await GroupService().updateGroupImage(groupId, imageUrl);
+          print("DEBUG: Group image uploaded successfully");
+        }
+
+        setState(() => _isLoadingImage = false);
+      }
 
       print("DEBUG: Group saved successfully!");
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Grup berhasil dibuat!")),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text("Grup berhasil dibuat!"),
+              ],
+            ),
+            backgroundColor: const Color(0xFF087B42),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     } catch (e) {
       print("DEBUG: Error saving group: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text("Error: $e"),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     } finally {
@@ -126,20 +249,39 @@ class _AddGroupPageState extends State<AddGroupPage> {
               Row(
                 children: [
                   // Image Placeholder
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                      image: const DecorationImage(
-                         // Ganti placeholder sesuai assetmu
-                        image: AssetImage('assets/images/design1.png'),
-                        fit: BoxFit.cover,
-                        opacity: 0.6
+                  GestureDetector(
+                    onTap: _isLoadingImage ? null : _pickImage,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                        color: Colors.grey.shade100,
                       ),
+                      child: _selectedImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                _selectedImage!,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : _isLoadingImage
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xFF0DB662),
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: Colors.black54,
+                                  size: 32,
+                                ),
                     ),
-                    child: const Icon(Icons.camera_alt_outlined, color: Colors.black54),
                   ),
                   const SizedBox(width: 16),
                   

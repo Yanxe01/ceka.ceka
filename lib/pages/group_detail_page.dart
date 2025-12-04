@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/group_model.dart';
 import 'group_setting_page.dart'; 
 import 'add_expense_page.dart'; // [BARU] Import halaman Add Expense temanmu
@@ -14,7 +15,37 @@ class GroupDetailPage extends StatefulWidget {
 }
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
-  final List<Map<String, dynamic>> _expenses = []; 
+  late Stream<QuerySnapshot> _expensesStream;
+
+  // Format angka dengan pemisah ribuan
+  String _formatCurrency(String value) {
+    if (value.isEmpty || value == '0') return '0';
+    final num = int.tryParse(value.replaceAll('.', ''));
+    if (num == null) return value;
+    return num.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize stream untuk mengambil expenses dari Firebase
+    print("DEBUG: GroupDetailPage initState - Group ID: ${widget.group.id}");
+    _expensesStream = FirebaseFirestore.instance
+        .collection('expenses')
+        .where('groupId', isEqualTo: widget.group.id)
+        .snapshots();
+
+    // Debug: Listen ke stream
+    _expensesStream.listen((snapshot) {
+      print("DEBUG: Expenses snapshot received - ${snapshot.docs.length} docs");
+      for (var doc in snapshot.docs) {
+        print("DEBUG: Expense data: ${doc.data()}");
+      }
+    });
+  }
 
   // Fungsi Pop-up Invite Link
   void _showInviteDialog() {
@@ -111,32 +142,97 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             ),
           ),
 
-          // ISI KONTEN
+          // ISI KONTEN - AMBIL DARI FIREBASE REALTIME
           Expanded(
-            child: _expenses.isEmpty 
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.green[50], shape: BoxShape.circle), child: const Icon(Icons.receipt_long_outlined, size: 50, color: Color(0xFF087B42))),
-                      const SizedBox(height: 20),
-                      Text("Belum ada pengeluaran", style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[800])),
-                      const SizedBox(height: 8),
-                      Text("Mulai catat pengeluaran grupmu di sini!", style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[500])),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _expensesStream,
+              builder: (context, snapshot) {
+                print("DEBUG: StreamBuilder state - ${snapshot.connectionState}");
+                
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  print("DEBUG: Waiting for data...");
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  print("DEBUG: Stream error: ${snapshot.error}");
+                  print("DEBUG: Stack trace: ${snapshot.stackTrace}");
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+
+                print("DEBUG: Has data: ${snapshot.hasData}, Docs: ${snapshot.data?.docs.length}");
+                
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  print("DEBUG: No expenses found");
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.green[50], shape: BoxShape.circle), child: const Icon(Icons.receipt_long_outlined, size: 50, color: Color(0xFF087B42))),
+                        const SizedBox(height: 20),
+                        Text("Belum ada pengeluaran", style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+                        const SizedBox(height: 8),
+                        Text("Mulai catat pengeluaran grupmu di sini!", style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[500])),
+                      ],
+                    ),
+                  );
+                }
+
+                // Tampilkan expenses dari Firebase
+                final expenses = snapshot.data!.docs;
+                print("DEBUG: Building ${expenses.length} expenses");
+                
+                // Sort by createdAt (newest first) di client side
+                expenses.sort((a, b) {
+                  final aData = a.data() as Map<String, dynamic>;
+                  final bData = b.data() as Map<String, dynamic>;
+                  final aTime = aData['createdAt'] as Timestamp?;
+                  final bTime = bData['createdAt'] as Timestamp?;
+                  return (bTime?.toDate() ?? DateTime.now()).compareTo(aTime?.toDate() ?? DateTime.now());
+                });
+                
+                return SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [const Icon(Icons.waving_hand, color: Colors.orange), const SizedBox(width: 8), Text("You're fully set up. Jump right in!", style: TextStyle(fontFamily: 'Poppins', color: Colors.grey[700]))]),
                       const SizedBox(height: 30),
-                      ..._expenses.map((data) => _buildExpenseItem(data['title'], data['subtitle'], data['isPaid'], data['date'], data['month'])),
+                      ...expenses.map((doc) {
+                        try {
+                          final data = doc.data() as Map<String, dynamic>;
+                          print("DEBUG: Processing expense: ${data['title']}");
+                          
+                          DateTime date;
+                          if (data['date'] != null && data['date'] is Timestamp) {
+                            date = (data['date'] as Timestamp).toDate();
+                          } else if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
+                            date = (data['createdAt'] as Timestamp).toDate();
+                          } else {
+                            date = DateTime.now();
+                            print("DEBUG: No date found, using now()");
+                          }
+                          
+                          final amount = (data['amount'] ?? 0).toDouble();
+                          final formattedAmount = _formatCurrency(amount.toStringAsFixed(0));
+
+                          return _buildExpenseItem(
+                            data['title'] ?? 'Untitled',
+                            'Rp $formattedAmount',
+                            false,
+                            date.day.toString().padLeft(2, '0'),
+                            _getMonthAbbr(date.month),
+                          );
+                        } catch (e) {
+                          print("DEBUG: Error processing expense: $e");
+                          return Container();
+                        }
+                      }).toList(),
                     ],
                   ),
-                ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -177,5 +273,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         ],
       ),
     );
+  }
+
+  String _getMonthAbbr(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
   }
 }

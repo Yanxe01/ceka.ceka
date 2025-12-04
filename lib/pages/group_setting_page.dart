@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // [PENTING] Untuk fitur Copy Clipboard
-import '../models/group_model.dart'; 
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import '../models/group_model.dart';
+import '../models/user_model.dart';
+import '../services/services.dart';
 
 class GroupSettingsPage extends StatefulWidget {
   final GroupModel group; 
@@ -14,16 +19,193 @@ class GroupSettingsPage extends StatefulWidget {
 class _GroupSettingsPageState extends State<GroupSettingsPage> {
   // --- STATE VARIABLE ---
   String _groupName = "";
-  String _description = ""; 
-  double _totalExpense = 0; 
-  late List<dynamic> _members;
+  String _description = "";
+  double _totalExpense = 0;
+  List<String> _memberUids = []; // UIDs dari group members
+  Map<String, UserModel> _memberDetails = {}; // Cache member details
   bool isCurrentUserAdmin = true; // Simulasi Admin
+  bool _loadingMembers = true;
+  File? _selectedImage;
+  bool _isLoadingImage = false;
+  String? _currentImageUrl;
 
   @override
   void initState() {
     super.initState();
     _groupName = widget.group.name;
-    _members = List.from(widget.group.members); 
+    _memberUids = List.from(widget.group.members);
+    _currentImageUrl = widget.group.image;
+    _fetchAllMemberDetails();
+  }
+
+  // Fetch semua member details dari Firebase
+  Future<void> _fetchAllMemberDetails() async {
+    try {
+      print("DEBUG: Fetching member details for group settings");
+      Map<String, UserModel> members = {};
+      UserService userService = UserService();
+
+      for (String uid in _memberUids) {
+        try {
+          UserModel? user = await userService.getUserData(uid);
+          if (user != null) {
+            members[uid] = user;
+            print("DEBUG: Loaded member - ${user.displayName} ($uid)");
+          }
+        } catch (e) {
+          print("DEBUG: Error fetching member $uid: $e");
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _memberDetails = members;
+          _loadingMembers = false;
+        });
+      }
+    } catch (e) {
+      print("DEBUG: Error in _fetchAllMemberDetails: $e");
+      if (mounted) {
+        setState(() => _loadingMembers = false);
+      }
+    }
+  }
+
+  // --- IMAGE PICKER & UPLOAD ---
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 75,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+
+        // Upload image immediately after selection
+        await _uploadAndUpdateGroupImage();
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('Gagal memilih gambar: $e'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _uploadAndUpdateGroupImage() async {
+    if (_selectedImage == null) return;
+
+    setState(() => _isLoadingImage = true);
+
+    try {
+      // Upload to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('group_pictures')
+          .child('${widget.group.id}.jpg');
+
+      final uploadTask = await storageRef.putFile(_selectedImage!);
+      final downloadURL = await uploadTask.ref.getDownloadURL();
+
+      // Update Firestore
+      await GroupService().updateGroupImage(widget.group.id, downloadURL);
+
+      setState(() {
+        _currentImageUrl = downloadURL;
+        _selectedImage = null;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Gambar grup berhasil diperbarui',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF0DB662),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Gagal mengupload gambar: $e'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingImage = false);
+      }
+    }
   }
 
   // --- 1. FUNGSI EDIT INFO GRUP ---
@@ -160,21 +342,59 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   }
 
   // --- 3. FUNGSI LAINNYA ---
-  void _removeMember(int index) { /* ... Logic sama seperti sebelumnya ... */ 
+  void _removeMember(int index) {
+    final uid = _memberUids[index];
+    final memberName = _memberDetails[uid]?.displayName ?? uid;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Hapus Anggota?"),
-        content: Text("Yakin ingin menghapus ${_members[index]} dari grup?"),
+        content: Text("Yakin ingin menghapus $memberName dari grup?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
-          TextButton(onPressed: () { setState(() { _members.removeAt(index); }); Navigator.pop(context); }, child: const Text("Hapus", style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              
+              try {
+                print("DEBUG: Attempting to remove member $uid from group ${widget.group.id}");
+                await GroupService().removeMember(widget.group.id, uid);
+                
+                if (mounted) {
+                  setState(() {
+                    _memberUids.removeAt(index);
+                    _memberDetails.remove(uid);
+                  });
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Member berhasil dihapus"),
+                      backgroundColor: Color(0xFF087B42),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                print("DEBUG: Error removing member: $e");
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Error: $e"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
   }
 
-  void _confirmLeaveGroup() { /* ... Logic sama seperti sebelumnya ... */ 
+  void _confirmLeaveGroup() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -182,21 +402,141 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
         content: const Text("Kamu tidak akan bisa melihat aktivitas grup ini lagi."),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
-          TextButton(onPressed: () { Navigator.pop(context); Navigator.pop(context); }, child: const Text("Keluar", style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () async {
+              // Close dialog first
+              Navigator.pop(context);
+              
+              // Show loading
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Sedang keluar dari grup..."),
+                    duration: Duration(seconds: 5),
+                  ),
+                );
+              }
+              
+              try {
+                print("DEBUG: Attempting to leave group ${widget.group.id}");
+                await GroupService().leaveGroup(widget.group.id);
+
+                if (mounted) {
+                  // Close settings page
+                  Navigator.pop(context);
+                  // Close group detail page and go back to group list
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                print("DEBUG: Error leaving group: $e");
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Error: ${e.toString()}"),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
   }
 
-  void _confirmDeleteGroup() { /* ... Logic sama seperti sebelumnya ... */
+  void _confirmDeleteGroup() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Hapus Grup Permanen?"),
-        content: const Text("Tindakan ini tidak bisa dibatalkan."),
+        content: const Text("Tindakan ini tidak bisa dibatalkan. Semua data expense akan terhapus."),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
-          TextButton(onPressed: () { Navigator.pop(context); Navigator.pop(context); }, child: const Text("Hapus Grup", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
+          TextButton(
+            onPressed: () async {
+              // Save context before async operations
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+              // Close dialog first
+              navigator.pop();
+
+              try {
+                print("DEBUG: Attempting to delete group ${widget.group.id}");
+
+                await GroupService().deleteGroup(widget.group.id);
+
+                print("DEBUG: Group deleted successfully, navigating back...");
+
+                if (!mounted) return;
+
+                // Navigate back - pop twice to go back to group list
+                if (navigator.canPop()) {
+                  navigator.pop(); // Close settings page
+                }
+
+                // Small delay to ensure first pop completes
+                await Future.delayed(const Duration(milliseconds: 100));
+
+                if (!mounted) return;
+
+                if (navigator.canPop()) {
+                  navigator.pop(); // Close group detail page
+                }
+
+                // Small delay before showing success message
+                await Future.delayed(const Duration(milliseconds: 100));
+
+                if (!mounted) return;
+
+                // Show success message after navigation
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: const [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 12),
+                        Text("Grup berhasil dihapus"),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFF087B42),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              } catch (e) {
+                print("DEBUG: Error deleting group: $e");
+                if (!mounted) return;
+
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text("Error: ${e.toString()}"),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
+            },
+            child: const Text("Hapus Grup", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -222,13 +562,97 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 80, height: 80,
-                  decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade300),
-                      image: const DecorationImage(image: AssetImage('assets/images/design1.png'), fit: BoxFit.cover, opacity: 0.5)),
+                GestureDetector(
+                  onTap: isCurrentUserAdmin && !_isLoadingImage ? _pickImage : null,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: _selectedImage != null
+                              ? Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                )
+                              : _currentImageUrl != null && _currentImageUrl!.isNotEmpty
+                                  ? Image.network(
+                                      _currentImageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Image.asset(
+                                          'assets/images/design1.png',
+                                          fit: BoxFit.cover,
+                                          opacity: const AlwaysStoppedAnimation(0.5),
+                                        );
+                                      },
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            value: loadingProgress.expectedTotalBytes != null
+                                                ? loadingProgress.cumulativeBytesLoaded /
+                                                    loadingProgress.expectedTotalBytes!
+                                                : null,
+                                            strokeWidth: 2,
+                                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                              Color(0xFF0DB662),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : Image.asset(
+                                      'assets/images/design1.png',
+                                      fit: BoxFit.cover,
+                                      opacity: const AlwaysStoppedAnimation(0.5),
+                                    ),
+                        ),
+                      ),
+                      if (_isLoadingImage)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (isCurrentUserAdmin && !_isLoadingImage)
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0DB662),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -302,48 +726,93 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
             const SizedBox(height: 16),
 
             // LIST MEMBER
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _members.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 20),
-              itemBuilder: (context, index) {
-                final memberName = _members[index];
-                bool isMemberAdmin = index == 0; 
-                return Row(
-                  children: [
-                    Container(
-                      width: 50, height: 50,
-                      decoration: const BoxDecoration(shape: BoxShape.circle, image: DecorationImage(image: AssetImage('assets/images/design1.png'), fit: BoxFit.cover)),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(memberName.toString(), style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500)),
-                              if (isMemberAdmin) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFF087B42), width: 0.5)),
-                                  child: const Text("Admin", style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF087B42), fontWeight: FontWeight.bold)),
-                                ),
-                              ]
-                            ],
+            if (_loadingMembers)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_memberUids.isEmpty)
+              const Center(
+                child: Text("No members in this group"),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _memberUids.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 20),
+                itemBuilder: (context, index) {
+                  final uid = _memberUids[index];
+                  final member = _memberDetails[uid];
+                  bool isMemberAdmin = index == 0;
+                  
+                  // Get display name (fallback ke email prefix)
+                  final displayName = (member?.displayName != null && member!.displayName!.isNotEmpty)
+                      ? member.displayName!
+                      : member?.email.split('@')[0] ?? uid;
+                  
+                  return Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey[200],
+                        ),
+                        child: Center(
+                          child: Text(
+                            displayName.isNotEmpty ? displayName[0].toUpperCase() : "?",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                           ),
-                          Text("member@gmail.com", style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[400])),
-                        ],
+                        ),
                       ),
-                    ),
-                    if (isCurrentUserAdmin && !isMemberAdmin) 
-                      IconButton(icon: Icon(Icons.remove_circle_outline, color: Colors.red[300], size: 20), onPressed: () => _removeMember(index)),
-                  ],
-                );
-              },
-            ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500),
+                                ),
+                                if (isMemberAdmin) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: const Color(0xFF087B42), width: 0.5),
+                                    ),
+                                    child: const Text(
+                                      "Admin",
+                                      style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF087B42), fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ]
+                              ],
+                            ),
+                            Text(
+                              member?.email ?? "No email",
+                              style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[400]),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isCurrentUserAdmin && !isMemberAdmin)
+                        IconButton(
+                          icon: Icon(Icons.remove_circle_outline, color: Colors.red[300], size: 20),
+                          onPressed: () => _removeMember(index),
+                        ),
+                    ],
+                  );
+                },
+              ),
 
             const SizedBox(height: 40),
             

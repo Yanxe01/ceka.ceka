@@ -22,16 +22,55 @@ class UserModel {
 
   /// Factory constructor untuk membuat UserModel dari Map
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
+    // Handle createdAt yang mungkin null atau tidak ada
+    DateTime parsedCreatedAt;
+    try {
+      if (map['createdAt'] != null) {
+        parsedCreatedAt = (map['createdAt'] as Timestamp).toDate();
+      } else {
+        parsedCreatedAt = DateTime.now();
+        print("DEBUG: createdAt is null for user $uid, using DateTime.now()");
+      }
+    } catch (e) {
+      parsedCreatedAt = DateTime.now();
+      print("DEBUG: Error parsing createdAt for user $uid: $e, using DateTime.now()");
+    }
+
+    // Handle updatedAt
+    DateTime? parsedUpdatedAt;
+    try {
+      if (map['updatedAt'] != null) {
+        parsedUpdatedAt = (map['updatedAt'] as Timestamp).toDate();
+      }
+    } catch (e) {
+      print("DEBUG: Error parsing updatedAt for user $uid: $e");
+    }
+
+    // BACKWARD COMPATIBILITY: Handle old field names
+    // Old: 'name' -> New: 'displayName'
+    // Old: 'phone' -> New: 'phoneNumber'
+    String? displayName = map['displayName'] as String?;
+    String? phoneNumber = map['phoneNumber'] as String?;
+
+    // Fallback ke field lama jika field baru tidak ada
+    if (displayName == null && map.containsKey('name')) {
+      displayName = map['name'] as String?;
+      print("DEBUG UserModel: Using legacy 'name' field for user $uid: '$displayName'");
+    }
+
+    if (phoneNumber == null && map.containsKey('phone')) {
+      phoneNumber = map['phone'] as String?;
+      print("DEBUG UserModel: Using legacy 'phone' field for user $uid: '$phoneNumber'");
+    }
+
     return UserModel(
       uid: uid,
-      email: map['email'] as String,
-      displayName: map['displayName'] as String?,
-      phoneNumber: map['phoneNumber'] as String?,
+      email: map['email'] as String? ?? 'unknown@example.com',
+      displayName: displayName,
+      phoneNumber: phoneNumber,
       photoURL: map['photoURL'] as String?,
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
-      updatedAt: map['updatedAt'] != null
-          ? (map['updatedAt'] as Timestamp).toDate()
-          : null,
+      createdAt: parsedCreatedAt,
+      updatedAt: parsedUpdatedAt,
     );
   }
 

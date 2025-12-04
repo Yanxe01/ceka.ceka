@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'groups_page.dart';
 import 'activity_page.dart';
 import 'profile_page.dart';
 import '../models/group_model.dart'; // PENTING: Pakai GroupModel
 import '../services/services.dart';  // PENTING: Import Service
 import 'group_detail_page.dart';
+import '../utils/migrate_user_data.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,6 +20,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Format angka dengan pemisah ribuan
+  String _formatCurrency(String value) {
+    if (value.isEmpty || value == '0') return '0';
+    final num = int.tryParse(value.replaceAll('.', ''));
+    if (num == null) return value;
+    return num.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
 
   @override
   void initState() {
@@ -40,6 +53,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     ));
 
     _animationController.forward();
+
+    // Auto-migrate user data jika diperlukan
+    _autoMigrateUserData();
+  }
+
+  /// Auto-migrate user data dari field lama (name, phone) ke field baru (displayName, phoneNumber)
+  Future<void> _autoMigrateUserData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      print("DEBUG: Auto-migrating user data for ${user.uid}");
+      await MigrateUserData.migrateSingleUser(user.uid);
+      print("DEBUG: Auto-migration completed");
+    } catch (e) {
+      print("DEBUG: Auto-migration error (can be ignored if already migrated): $e");
+    }
   }
 
   @override
@@ -98,16 +128,46 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                     const SizedBox(height: 16),
 
-                    // Summary cards
+                    // Summary cards dengan StreamBuilder untuk realtime data
                     Row(
                       children: [
+                        // Total Utang
                         Expanded(
-                            child: _buildSummaryCard(
-                                'Total Utang :', 'Rp. 187.500.00')),
+                          child: StreamBuilder<double>(
+                            stream: ExpenseService().getTotalUtang(),
+                            builder: (context, snapshot) {
+                              print("DEBUG HomePage: Utang StreamBuilder - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, data: ${snapshot.data}");
+                              if (snapshot.hasError) {
+                                print("DEBUG HomePage: Utang StreamBuilder ERROR: ${snapshot.error}");
+                              }
+                              final utang = snapshot.data ?? 0;
+                              final formatted = _formatCurrency(utang.toStringAsFixed(0));
+                              return _buildSummaryCard(
+                                'Total Utang :',
+                                'Rp $formatted',
+                              );
+                            },
+                          ),
+                        ),
                         const SizedBox(width: 12),
+                        // Total Piutang
                         Expanded(
-                            child: _buildSummaryCard(
-                                'Total Piutang :', 'Rp. 87.000.00')),
+                          child: StreamBuilder<double>(
+                            stream: ExpenseService().getTotalPiutang(),
+                            builder: (context, snapshot) {
+                              print("DEBUG HomePage: Piutang StreamBuilder - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, data: ${snapshot.data}");
+                              if (snapshot.hasError) {
+                                print("DEBUG HomePage: Piutang StreamBuilder ERROR: ${snapshot.error}");
+                              }
+                              final piutang = snapshot.data ?? 0;
+                              final formatted = _formatCurrency(piutang.toStringAsFixed(0));
+                              return _buildSummaryCard(
+                                'Total Piutang :',
+                                'Rp $formatted',
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -191,6 +251,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       decoration: const BoxDecoration(
         color: Color(0xFF087B42),
       ),
+      clipBehavior: Clip.hardEdge,
       child: Row(
         children: [
           Container(
@@ -206,12 +267,43 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
           const SizedBox(width: 16),
           Expanded(
-            // Mengambil Nama User Asli
+            // Mengambil Nama User Asli dari Firestore
             child: StreamBuilder(
               stream: UserService().getCurrentUserDataStream(),
               builder: (context, snapshot) {
-                final name = snapshot.data?.displayName ?? "User";
-                final firstName = name.split(' ')[0];
+                print("DEBUG HomePage Header: ConnectionState: ${snapshot.connectionState}");
+                print("DEBUG HomePage Header: HasData: ${snapshot.hasData}");
+                print("DEBUG HomePage Header: Data: ${snapshot.data}");
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text(
+                    'Halo, User!',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -0.48,
+                    ),
+                  );
+                }
+
+                // Ambil displayName dari UserModel atau fallback ke email
+                final userData = snapshot.data;
+                String displayName = "User";
+
+                if (userData != null) {
+                  if (userData.displayName != null && userData.displayName!.isNotEmpty) {
+                    displayName = userData.displayName!;
+                  } else {
+                    // Fallback ke email prefix jika displayName kosong
+                    displayName = userData.email.split('@')[0];
+                  }
+                }
+
+                // Ambil kata pertama dari nama
+                final firstName = displayName.split(' ')[0];
+
                 return Text(
                   'Halo, $firstName!',
                   style: const TextStyle(

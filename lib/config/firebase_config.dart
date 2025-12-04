@@ -24,7 +24,7 @@ class FirebaseConfig {
   // Dapatkan dari Firebase Console > Project Settings > Your apps
 
   static const FirebaseOptions webOptions = FirebaseOptions(
-    apiKey: '',
+    apiKey: '', //GANTI API YANG DIBUAT
     appId: '1:727120428216:android:ba0585e37c964b0c40c84d',
     messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
     projectId: 'YOUR_PROJECT_ID',

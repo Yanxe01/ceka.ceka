@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Temporarily disabled until OAuth is configured
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'registration_page.dart';
 import 'onboarding_page.dart';
-import '../services/google_auth_service.dart';
-import '../services/auth_exceptions.dart';
+// import '../services/google_auth_service.dart';
+// import '../services/auth_exceptions.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -374,72 +375,73 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isLoading = true;
-    });
+  // Temporarily disabled until OAuth is configured in Firebase
+  // Future<void> _handleGoogleSignIn() async {
+  //   setState(() {
+  //     _isLoading = true;
+  //   });
 
-    try {
-      final googleAuthService = GoogleAuthService();
-      final userCredential = await googleAuthService.signInWithGoogle();
+  //   try {
+  //     final googleAuthService = GoogleAuthService();
+  //     final userCredential = await googleAuthService.signInWithGoogle();
 
-      // Check if user data exists in Firestore
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
+  //     // Check if user data exists in Firestore
+  //     final userDoc = await FirebaseFirestore.instance
+  //         .collection('users')
+  //         .doc(userCredential.user!.uid)
+  //         .get();
 
-      // If user doesn't exist in Firestore, create user document
-      if (!userDoc.exists) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set({
-          'uid': userCredential.user!.uid,
-          'displayName': userCredential.user!.displayName ?? 'User',
-          'email': userCredential.user!.email,
-          'phoneNumber': userCredential.user!.phoneNumber ?? '',
-          'photoURL': userCredential.user!.photoURL,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
+  //     // If user doesn't exist in Firestore, create user document
+  //     if (!userDoc.exists) {
+  //       await FirebaseFirestore.instance
+  //           .collection('users')
+  //           .doc(userCredential.user!.uid)
+  //           .set({
+  //         'uid': userCredential.user!.uid,
+  //         'displayName': userCredential.user!.displayName ?? 'User',
+  //         'email': userCredential.user!.email,
+  //         'phoneNumber': userCredential.user!.phoneNumber ?? '',
+  //         'photoURL': userCredential.user!.photoURL,
+  //         'createdAt': FieldValue.serverTimestamp(),
+  //         'updatedAt': FieldValue.serverTimestamp(),
+  //       });
+  //     }
 
-      if (!mounted) return;
+  //     if (!mounted) return;
 
-      // Navigate to onboarding
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const OnboardingPage(),
-        ),
-      );
-    } on AuthException catch (e) {
-      if (!mounted) return;
+  //     // Navigate to onboarding
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (context) => const OnboardingPage(),
+  //       ),
+  //     );
+  //   } on AuthException catch (e) {
+  //     if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(e.message),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal login dengan Google: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('Gagal login dengan Google: $e'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() {
+  //         _isLoading = false;
+  //       });
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -697,29 +699,29 @@ class _LoginPageState extends State<LoginPage>
                               ),
                               const SizedBox(height: 16),
 
-                              // Social buttons
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildSocialButton(
-                                    icon: Icons.g_mobiledata,
-                                    color: const Color(0xFFA46651),
-                                    onTap: _isLoading ? () {} : _handleGoogleSignIn,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    icon: Icons.apple,
-                                    color: const Color(0xFF087B42),
-                                    onTap: () {},
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildSocialButton(
-                                    icon: Icons.facebook,
-                                    color: const Color(0xFF0DB662),
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
+                              // Social buttons (Temporarily disabled until OAuth is configured)
+                              // Row(
+                              //   mainAxisAlignment: MainAxisAlignment.center,
+                              //   children: [
+                              //     _buildSocialButton(
+                              //       icon: Icons.g_mobiledata,
+                              //       color: const Color(0xFFA46651),
+                              //       onTap: _isLoading ? () {} : _handleGoogleSignIn,
+                              //     ),
+                              //     const SizedBox(width: 12),
+                              //     _buildSocialButton(
+                              //       icon: Icons.apple,
+                              //       color: const Color(0xFF087B42),
+                              //       onTap: () {},
+                              //     ),
+                              //     const SizedBox(width: 12),
+                              //     _buildSocialButton(
+                              //       icon: Icons.facebook,
+                              //       color: const Color(0xFF0DB662),
+                              //       onTap: () {},
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),
@@ -778,26 +780,27 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
-        ),
-      ),
-    );
-  }
+  // Temporarily disabled until OAuth is configured
+  // Widget _buildSocialButton({
+  //   required IconData icon,
+  //   required Color color,
+  //   required VoidCallback onTap,
+  // }) {
+  //   return GestureDetector(
+  //     onTap: onTap,
+  //     child: Container(
+  //       width: 40,
+  //       height: 40,
+  //       decoration: BoxDecoration(
+  //         color: color,
+  //         shape: BoxShape.circle,
+  //       ),
+  //       child: Icon(
+  //         icon,
+  //         color: Colors.white,
+  //         size: 20,
+  //       ),
+  //     ),
+  //   );
+  // }
 }

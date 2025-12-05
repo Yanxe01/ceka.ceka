@@ -137,6 +137,64 @@ class GroupService {
     return true; // Berhasil join
   }
 
+  // --- 3B. JOIN GROUP BY CODE (WITH GROUP MODEL RETURN) ---
+  Future<GroupModel> joinGroupWithCode(String inviteCode) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        print("DEBUG: JoinGroupWithCode - User is null");
+        throw Exception("User belum login");
+      }
+
+      print("DEBUG: JoinGroupWithCode - User ${user.uid} trying to join with code: $inviteCode");
+
+      // Cari grup berdasarkan kode
+      print("DEBUG: JoinGroupWithCode - Querying Firestore for invite code...");
+      final querySnapshot = await _groups
+          .where('inviteCode', isEqualTo: inviteCode.toUpperCase())
+          .limit(1)
+          .get();
+
+      print("DEBUG: JoinGroupWithCode - Query completed. Found ${querySnapshot.docs.length} groups");
+
+      if (querySnapshot.docs.isEmpty) {
+        print("DEBUG: JoinGroupWithCode - Group not found");
+        throw Exception("Group not found");
+      }
+
+      final doc = querySnapshot.docs.first;
+      print("DEBUG: JoinGroupWithCode - Found group: ${doc.id}");
+
+      final List members = doc['members'];
+      print("DEBUG: JoinGroupWithCode - Current members: $members");
+
+      // Cek apakah sudah join
+      if (members.contains(user.uid)) {
+        print("DEBUG: JoinGroupWithCode - User already a member");
+        throw Exception("User already a member");
+      }
+
+      // Tambahkan user ke array members
+      print("DEBUG: JoinGroupWithCode - Attempting to add user to members...");
+      await _groups.doc(doc.id).update({
+        'members': FieldValue.arrayUnion([user.uid])
+      });
+
+      print("DEBUG: JoinGroupWithCode - Successfully updated members");
+
+      // Ambil data group yang sudah diupdate
+      print("DEBUG: JoinGroupWithCode - Fetching updated group data...");
+      final updatedDoc = await _groups.doc(doc.id).get();
+
+      print("DEBUG: JoinGroupWithCode - Successfully joined group");
+      return GroupModel.fromDocumentSnapshot(updatedDoc);
+    } catch (e) {
+      print("DEBUG: JoinGroupWithCode - Error caught: $e");
+      print("DEBUG: JoinGroupWithCode - Error type: ${e.runtimeType}");
+      rethrow;
+    }
+  }
+
   // --- 4. LEAVE GROUP ---
   /// User meninggalkan grup
   Future<void> leaveGroup(String groupId) async {

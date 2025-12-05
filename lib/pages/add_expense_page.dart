@@ -17,7 +17,7 @@ class AddExpensePage extends StatefulWidget {
 class _AddExpensePageState extends State<AddExpensePage> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  
+
   // State untuk Logic
   List<UserModel> _groupMembers = [];
   List<String> _selectedMemberIds = []; // Siapa saja yang kena tagihan
@@ -25,6 +25,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
   String _splitType = 'equal'; // equal, percent, exact
   bool _isLoading = false;
   bool _loadingMembers = true; // Loading state untuk fetch members
+  DateTime? _selectedDueDate; // Tanggal deadline pembayaran
 
   // Format angka dengan pemisah ribuan
   String _formatCurrency(String value) {
@@ -120,6 +121,35 @@ class _AddExpensePageState extends State<AddExpensePage> {
     }
   }
 
+  // Fungsi untuk memilih tanggal deadline
+  Future<void> _selectDueDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDueDate ?? DateTime.now().add(const Duration(days: 7)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF0DB662),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _selectedDueDate) {
+      setState(() {
+        _selectedDueDate = picked;
+      });
+    }
+  }
+
   // Fungsi Simpan ke Backend
   void _saveExpense() async {
     print("DEBUG: _saveExpense called");
@@ -127,6 +157,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
     print("DEBUG: Amount: ${_amountController.text}");
     print("DEBUG: Selected Members: $_selectedMemberIds");
     print("DEBUG: Split Type: $_splitType");
+    print("DEBUG: Due Date: $_selectedDueDate");
 
     if (_titleController.text.trim().isEmpty || _amountController.text.trim().isEmpty) {
       print("DEBUG: Input validation failed - empty fields");
@@ -178,6 +209,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
       print("DEBUG: SplitType: $_splitType");
       print("DEBUG: SplitDetails MAP: $_finalSplitAmounts");
       print("DEBUG: Number of people in split: ${_finalSplitAmounts.length}");
+      print("DEBUG: Due Date: $_selectedDueDate");
 
       // Validate: Must have at least 2 people (payer + at least 1 other)
       if (_finalSplitAmounts.length < 2) {
@@ -200,6 +232,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
         groupId: widget.group.id,
         splitDetails: _finalSplitAmounts,
         splitType: _splitType,
+        dueDate: _selectedDueDate,
       );
       print("DEBUG: Expense saved successfully");
       if (mounted) {
@@ -343,6 +376,84 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
             const SizedBox(height: 24),
 
+            // --- DUE DATE SECTION ---
+            GestureDetector(
+              onTap: _selectDueDate,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _selectedDueDate != null
+                      ? const Color(0xFF0DB662).withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedDueDate != null
+                        ? const Color(0xFF0DB662)
+                        : Colors.grey.shade400,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.event_outlined,
+                      color: _selectedDueDate != null
+                          ? const Color(0xFF0DB662)
+                          : Colors.grey,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Deadline Pembayaran",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedDueDate != null
+                                ? "${_selectedDueDate!.day}/${_selectedDueDate!.month}/${_selectedDueDate!.year}"
+                                : "Belum diatur (opsional)",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _selectedDueDate != null
+                                  ? const Color(0xFF0DB662)
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_selectedDueDate != null)
+                      IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.red, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _selectedDueDate = null;
+                          });
+                        },
+                      )
+                    else
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // --- BOTTOM BAR INFO ---
             Container(
               padding: const EdgeInsets.all(16),
@@ -402,11 +513,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
               Expanded(
                 child: TextField(
                   controller: _titleController,
-                  style: const TextStyle(fontFamily: 'Poppins', color: Colors.grey),
+                  style: const TextStyle(fontFamily: 'Poppins', color: Colors.black87),
                   decoration: const InputDecoration(
-                    hintText: "Enter a description",
+                    hintText: "Deskripsi pembayaran (contoh: Listrik, Air, Internet)",
                     border: InputBorder.none,
-                    hintStyle: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
+                    hintStyle: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 13),
                   ),
                 ),
               ),
@@ -497,13 +608,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         children: _groupMembers.map((member) {
                           final isSelected = _selectedMemberIds.contains(member.uid);
                           final displayName = (member.displayName != null && member.displayName!.isNotEmpty)
-                              ? member.displayName! 
+                              ? member.displayName!
                               : member.email.split('@')[0]; // Fallback ke email prefix
-                          
+
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: CircleAvatar(
-                              backgroundColor: Colors.grey[200], 
+                              backgroundColor: Colors.grey[200],
                               child: Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : "?")
                             ),
                             title: Text(
@@ -526,8 +637,21 @@ class _AddExpensePageState extends State<AddExpensePage> {
                                     _selectedMemberIds.remove(member.uid);
                                   }
                                 });
-                                // Update parent state juga agar jumlah orang terupdate
-                                setState(() {}); 
+                                // Update parent state dan auto-calculate equal split
+                                setState(() {
+                                  // Auto-calculate equal split ketika member berubah
+                                  if (_splitType == 'equal' && _selectedMemberIds.isNotEmpty) {
+                                    double totalAmount = double.tryParse(_amountController.text.replaceAll('.', '')) ?? 0;
+                                    if (totalAmount > 0) {
+                                      double splitVal = totalAmount / _selectedMemberIds.length;
+                                      _finalSplitAmounts.clear();
+                                      for (var uid in _selectedMemberIds) {
+                                        _finalSplitAmounts[uid] = splitVal;
+                                      }
+                                      print("DEBUG: Auto-calculated equal split after member change: $_finalSplitAmounts");
+                                    }
+                                  }
+                                });
                               },
                             ),
                           );

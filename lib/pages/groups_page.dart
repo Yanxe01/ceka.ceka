@@ -4,6 +4,7 @@ import '../models/group_model.dart'; // PENTING: Pakai GroupModel
 import '../services/services.dart'; // PENTING: Import Service
 import 'add_group_page.dart';
 import 'group_detail_page.dart';
+import 'join_group_page.dart';
 
 class GroupsPage extends StatefulWidget {
   const GroupsPage({super.key});
@@ -261,37 +262,73 @@ class _GroupsPageState extends State<GroupsPage> {
               ),
             ),
 
-            // Tombol Buat Grup Baru
+            // Tombol Buat Grup Baru & Join Grup
             Padding(
-              padding: const EdgeInsets.only(bottom: 30),
-              child: SizedBox(
-                width: 200,
-                height: 45,
-                child: OutlinedButton(
-                  onPressed: () {
-                    // Cukup push biasa, karena StreamBuilder otomatis refresh kalau ada data baru
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AddGroupPage()),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Theme.of(context).cardTheme.color,
-                    side: const BorderSide(color: Color(0xFF0DB662)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+              padding: const EdgeInsets.only(bottom: 30, left: 24, right: 24),
+              child: Row(
+                children: [
+                  // Button Buat Grup
+                  Expanded(
+                    child: SizedBox(
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AddGroupPage()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0DB662),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Buat Grup',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    'Buat Grup Baru',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                  const SizedBox(width: 12),
+                  // Button Join Grup
+                  Expanded(
+                    child: SizedBox(
+                      height: 45,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const JoinGroupPage()),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Theme.of(context).cardTheme.color,
+                          side: const BorderSide(color: Color(0xFF0DB662), width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: Text(
+                          'Join Grup',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ],

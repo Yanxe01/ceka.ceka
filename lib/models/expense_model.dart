@@ -5,6 +5,7 @@ class ExpenseModel {
   final String title;
   final double amount;
   final DateTime date;
+  final DateTime? dueDate; // Tanggal deadline pembayaran (optional)
   final String groupId;
   final String payerId; // Siapa yang menalangi (biasanya user yang login)
   final Map<String, double> splitDetails; // Key: UserID, Value: Nominal Hutang
@@ -15,6 +16,7 @@ class ExpenseModel {
     required this.title,
     required this.amount,
     required this.date,
+    this.dueDate,
     required this.groupId,
     required this.payerId,
     required this.splitDetails,
@@ -26,6 +28,7 @@ class ExpenseModel {
       'title': title,
       'amount': amount,
       'date': Timestamp.fromDate(date),
+      'dueDate': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
       'groupId': groupId,
       'payerId': payerId,
       'splitDetails': splitDetails,

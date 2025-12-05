@@ -297,11 +297,23 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Widget _buildActivityCard(Map<String, dynamic> data, {required bool isHistory}) {
     final status = data['status'] ?? (isHistory ? 'paid' : 'unpaid');
+    final isRepayment = data['isRepayment'] == true;
+    final isCoveredPayment = data['isCoveredPayment'] == true;
+    final userIsPayer = data['userIsPayer'] == true;
+    final userIsReceiver = data['userIsReceiver'] == true;
 
     Color statusColor;
     String statusText;
 
-    if (isHistory || status == 'paid') {
+    if (status == 'received') {
+      // User menerima pembayaran dari orang lain
+      statusColor = const Color(0xFF0DB662);
+      statusText = 'Received';
+    } else if (status == 'covered') {
+      // Admin menanggung pembayaran member
+      statusColor = Colors.orange;
+      statusText = 'Covered';
+    } else if (isHistory || status == 'paid') {
       statusColor = const Color(0xFF0DB662);
       statusText = 'Paid';
     } else {
@@ -315,10 +327,30 @@ class _ActivityPageState extends State<ActivityPage> {
 
     final formattedAmount = _formatCurrency(amount);
 
+    // Check if due date exists and format it
+    String? dueDateText;
+    if (!isHistory && data['dueDate'] != null) {
+      dueDateText = _formatDate(data['dueDate']);
+    }
+
+    // Tentukan payment method text
+    String paymentMethodText = '';
+    if (data['paymentMethod'] != null && isHistory) {
+      if (data['paymentMethod'] == 'payer_covered') {
+        paymentMethodText = 'Ditanggung Admin';
+      } else if (data['paymentMethod'] == 'cash') {
+        paymentMethodText = 'Cash';
+      } else if (data['paymentMethod'] == 'bank_transfer') {
+        paymentMethodText = 'Bank Transfer';
+      } else {
+        paymentMethodText = 'E-Wallet';
+      }
+    }
+
     return GestureDetector(
       onTap: () {
-        // Hanya bisa klik jika di tab Bills (belum lunas)
-        if (!isHistory) {
+        // Hanya bisa klik jika di tab Bills (belum lunas) dan bukan repayment/covered
+        if (!isHistory && !isRepayment && !isCoveredPayment) {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -332,7 +364,14 @@ class _ActivityPageState extends State<ActivityPage> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF0DB662), width: 1),
+          border: Border.all(
+            color: isRepayment
+                ? Colors.orange
+                : isCoveredPayment
+                    ? Colors.blue
+                    : const Color(0xFF0DB662),
+            width: 1,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,37 +381,139 @@ class _ActivityPageState extends State<ActivityPage> {
               height: 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/design1.png'),
-                  fit: BoxFit.cover,
-                ),
-                color: Colors.grey[300],
+                color: isRepayment
+                    ? Colors.orange.withValues(alpha: 0.2)
+                    : isCoveredPayment
+                        ? Colors.blue.withValues(alpha: 0.2)
+                        : isHistory
+                            ? const Color(0xFF0DB662).withValues(alpha: 0.2)
+                            : Colors.grey[300],
+                image: (!isRepayment && !isCoveredPayment && !isHistory)
+                    ? const DecorationImage(
+                        image: AssetImage('assets/images/design1.png'),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
+              child: (isRepayment || isCoveredPayment || isHistory)
+                  ? Icon(
+                      isRepayment
+                          ? Icons.payments
+                          : isCoveredPayment
+                              ? Icons.support
+                              : Icons.arrow_downward,
+                      color: isRepayment
+                          ? Colors.orange
+                          : isCoveredPayment
+                              ? Colors.blue
+                              : const Color(0xFF0DB662),
+                      size: 28,
+                    )
+                  : null,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    data['title'] ?? 'Untitled',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          data['title'] ?? 'Untitled',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                      ),
+                      if (isRepayment)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'REPAYMENT',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                      if (isCoveredPayment)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'COVERED',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 4),
-                  if (data['paymentMethod'] != null && isHistory)
+                  // Tampilkan counterpart name dengan role yang sesuai
+                  if (data['counterpartName'] != null && data['counterpartName'].toString().isNotEmpty && data['counterpartRole'] != null)
                     Text(
-                      'Metode: ${data['paymentMethod'] == 'cash' ? 'Cash' : data['paymentMethod'] == 'bank_transfer' ? 'Bank Transfer' : 'E-Wallet'}',
+                      '${data['counterpartRole']}: ${data['counterpartName']}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[300]
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  if (paymentMethodText.isNotEmpty)
+                    Text(
+                      'Metode: $paymentMethodText',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 11,
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.grey[400]
                             : Colors.grey,
+                      ),
+                    ),
+                  if (dueDateText != null && dueDateText.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 11,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : Colors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Jatuh tempo: $dueDateText',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   const SizedBox(height: 4),

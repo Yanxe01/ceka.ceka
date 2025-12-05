@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'groups_page.dart';
 import 'activity_page.dart';
 import 'profile_page.dart';
+import 'payment_requests_page.dart';
+import 'cover_payment_page.dart';
+import 'repay_debt_page.dart';
 import '../models/group_model.dart'; // PENTING: Pakai GroupModel
 import '../services/services.dart';  // PENTING: Import Service
 import 'group_detail_page.dart';
@@ -316,6 +320,96 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 );
               }
             ),
+          ),
+          // Button untuk Cover Payment (Tanggung pembayaran member)
+          IconButton(
+            icon: const Icon(
+              Icons.volunteer_activism,
+              color: Colors.white,
+              size: 26,
+            ),
+            tooltip: 'Tanggung Pembayaran Member',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CoverPaymentPage(),
+                ),
+              );
+            },
+          ),
+          // Button untuk Repay Debt (Bayar utang penalangan)
+          IconButton(
+            icon: const Icon(
+              Icons.payment,
+              color: Colors.white,
+              size: 26,
+            ),
+            tooltip: 'Bayar Utang Penalangan',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RepayDebtPage(),
+                ),
+              );
+            },
+          ),
+          // Notification button untuk Payment Requests
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('payments')
+                .where('receiverId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                .where('status', isEqualTo: 'pending')
+                .snapshots(),
+            builder: (context, snapshot) {
+              final count = snapshot.data?.docs.length ?? 0;
+
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PaymentRequestsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          count > 9 ? '9+' : count.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),

@@ -33,7 +33,7 @@ class FirebaseConfig {
   );
 
   static const FirebaseOptions androidOptions = FirebaseOptions(
-    apiKey: 'AIzaSyBVKmv1MXJuur3hB6yOYah3xx3syKh1OnA',
+    apiKey: '', //GANTI API YANG DIBUAT
     appId: '1:727120428216:android:ba0585e37c964b0c40c84d',
     messagingSenderId: '727120428216',
     projectId: 'tugasmobile-59071',

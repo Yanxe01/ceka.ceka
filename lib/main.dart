@@ -5,6 +5,7 @@ import 'config/firebase_config.dart';
 import 'pages/login_page.dart';
 import 'providers/theme_provider.dart';
 import 'theme/app_theme.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +15,10 @@ void main() async {
 
   // Inisialisasi Firebase
   await FirebaseConfig.initialize();
+
+  // Inisialisasi Notification Service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
 
   runApp(
     ChangeNotifierProvider(
@@ -26,11 +31,18 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // GlobalKey untuk navigasi dan menampilkan notifikasi
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
+    // Set navigatorKey untuk NotificationService
+    NotificationService.navigatorKey = navigatorKey;
+
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'CekaCeka',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,

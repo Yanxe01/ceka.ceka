@@ -5,7 +5,7 @@ class ExpenseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<void> addExpense({
+  Future<DocumentReference> addExpense({
     required String title,
     required double amount,
     required String groupId,
@@ -38,8 +38,27 @@ class ExpenseService {
 
     print("DEBUG addExpense: Full expense data being saved: $expenseData");
 
-    await _firestore.collection('expenses').add(expenseData);
-    print("DEBUG addExpense: Expense saved successfully");
+    final docRef = await _firestore.collection('expenses').add(expenseData);
+    print("DEBUG addExpense: Expense saved successfully with ID: ${docRef.id}");
+
+    // Kirim notifikasi piutang ke user yang membuat expense (karena orang lain berhutang ke dia)
+    // Note: Notifikasi piutang dikirim ke user yang memiliki piutang, bukan debtor
+    // Dalam kasus ini, user yang membuat expense memiliki piutang dari member lain
+    // Tapi notifikasi ini akan dikirim setelah expense dibuat dan member membayar
+
+    // Jika ada due date, schedule reminder H-1
+    if (dueDate != null) {
+      final reminderService = ReminderService();
+      await reminderService.scheduleH1Reminder(
+        expenseId: docRef.id,
+        groupId: groupId,
+        expenseTitle: title,
+        dueDate: dueDate,
+        splitDetails: splitDetails,
+      );
+    }
+
+    return docRef;
   }
 
   /// Get total utang (berapa yang harus user bayar ke orang lain)

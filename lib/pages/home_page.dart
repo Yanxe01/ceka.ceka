@@ -11,6 +11,7 @@ import '../models/group_model.dart'; // PENTING: Pakai GroupModel
 import '../services/services.dart';  // PENTING: Import Service
 import 'group_detail_page.dart';
 import '../utils/migrate_user_data.dart';
+import '../services/notification_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,6 +61,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     // Auto-migrate user data jika diperlukan
     _autoMigrateUserData();
+
+    // Setup notification listener setelah user login
+    NotificationService().setupNotificationListener();
   }
 
   /// Auto-migrate user data dari field lama (name, phone) ke field baru (displayName, phoneNumber)

@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import '../models/group_model.dart';
 import '../models/user_model.dart';
 import '../services/services.dart';
-import '../services/expense_service.dart';
+import '../services/notification_service.dart';
+import '../services/reminder_service.dart';
 
 class AddExpensePage extends StatefulWidget {
   final GroupModel group;
@@ -17,6 +18,8 @@ class AddExpensePage extends StatefulWidget {
 class _AddExpensePageState extends State<AddExpensePage> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+  final _notificationService = NotificationService();
+  final _reminderService = ReminderService();
 
   // State untuk Logic
   List<UserModel> _groupMembers = [];
@@ -226,7 +229,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
         return;
       }
 
-      await ExpenseService().addExpense(
+      final expenseRef = await ExpenseService().addExpense(
         title: _titleController.text.trim(),
         amount: totalAmount,
         groupId: widget.group.id,
@@ -235,6 +238,27 @@ class _AddExpensePageState extends State<AddExpensePage> {
         dueDate: _selectedDueDate,
       );
       print("DEBUG: Expense saved successfully");
+
+      // Kirim notifikasi ke semua member tentang expense baru
+      _notificationService.sendExpenseAddedNotification(
+        expenseId: expenseRef.id,
+        groupId: widget.group.id,
+        expenseTitle: _titleController.text.trim(),
+        amount: totalAmount,
+        splitDetails: _finalSplitAmounts,
+      );
+
+      // Jika ada due date, jadwalkan reminder
+      if (_selectedDueDate != null) {
+        _reminderService.scheduleReminderForExpense(
+          '${expenseRef.id}_due_reminder',
+          _selectedDueDate!,
+          title: 'Pengingat Pembayaran',
+          body: 'Grup ${widget.group.name}: ${_titleController.text.trim()} - Jatuh tempo hari ini!',
+          payload: 'expense_due:${expenseRef.id}:${widget.group.id}',
+        );
+      }
+
       if (mounted) {
         Navigator.pop(context); // Kembali ke halaman sebelumnya
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Expense berhasil ditambahkan!")));

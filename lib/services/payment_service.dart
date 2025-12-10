@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 import '../models/payment_model.dart';
+import '../services/notification_service.dart';
 
 class PaymentService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -648,6 +649,46 @@ class PaymentService {
     } catch (e) {
       print("ERROR repayForCoveredDebt: $e");
       rethrow;
+    }
+  }
+
+  /// Helper method untuk kirim notifikasi konfirmasi pembayaran
+  Future<void> _sendPaymentConfirmedNotification(String paymentId) async {
+    try {
+      // Ambil data payment
+      final paymentDoc = await _firestore.collection('payments').doc(paymentId).get();
+      if (!paymentDoc.exists) return;
+
+      final paymentData = paymentDoc.data()!;
+      final expenseId = paymentData['expenseId'] as String?;
+      final payerId = paymentData['payerId'] as String?;
+      final amount = (paymentData['amount'] ?? 0).toDouble();
+
+      if (expenseId == null || payerId == null) return;
+
+      // Ambil data expense
+      final expenseDoc = await _firestore.collection('expenses').doc(expenseId).get();
+      if (!expenseDoc.exists) return;
+
+      final expenseData = expenseDoc.data()!;
+      final groupId = expenseData['groupId'] as String?;
+      final expenseTitle = expenseData['title'] ?? 'Unknown Expense';
+
+      if (groupId == null) return;
+
+      // Kirim notifikasi menggunakan NotificationService
+      final notificationService = NotificationService();
+      await notificationService.sendPaymentConfirmedNotification(
+        paymentId: paymentId,
+        expenseId: expenseId,
+        groupId: groupId,
+        expenseTitle: expenseTitle,
+        payerId: payerId,
+        amount: amount,
+      );
+
+    } catch (e) {
+      print("ERROR _sendPaymentConfirmedNotification: $e");
     }
   }
 }

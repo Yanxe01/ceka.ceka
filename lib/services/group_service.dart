@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math'; // Untuk generate random code
 import '../models/group_model.dart';
+import '../services/notification_service.dart';
 
 class GroupService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -50,6 +51,11 @@ class GroupService {
     try {
       final docRef = await _groups.add(groupData);
       print("DEBUG GroupService: Group saved with ID: ${docRef.id}");
+
+      // Kirim notifikasi ke semua member baru tentang group yang dibuat
+      // Note: Saat create group, hanya creator yang ada di memberIds
+      // Notifikasi akan dikirim saat joinGroup() dipanggil
+
       return docRef.id; // Return group ID for image upload
     } catch (e) {
       print("DEBUG GroupService: Error saving to Firestore: $e");
@@ -181,6 +187,19 @@ class GroupService {
       });
 
       print("DEBUG: JoinGroupWithCode - Successfully updated members");
+
+      // Kirim notifikasi ke semua member lain tentang member baru yang join
+      final groupData = await _groups.doc(doc.id).get();
+      final groupName = groupData.data()?['name'] ?? 'Unknown Group';
+      final allMembers = List<String>.from(groupData.data()?['members'] ?? []);
+
+      // Kirim notifikasi ke semua member kecuali yang baru join
+      final notificationService = NotificationService();
+      await notificationService.sendGroupCreatedNotification(
+        groupId: doc.id,
+        groupName: groupName,
+        memberIds: allMembers.where((id) => id != user.uid).toList(),
+      );
 
       // Ambil data group yang sudah diupdate
       print("DEBUG: JoinGroupWithCode - Fetching updated group data...");

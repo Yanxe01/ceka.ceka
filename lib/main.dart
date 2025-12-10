@@ -5,7 +5,7 @@ import 'config/firebase_config.dart';
 import 'pages/login_page.dart';
 import 'providers/theme_provider.dart';
 import 'theme/app_theme.dart';
-import 'services/notification_service.dart';
+import 'services/simple_notification_service.dart';
 
 
 void main() async {
@@ -17,8 +17,8 @@ void main() async {
   // Inisialisasi Firebase
   await FirebaseConfig.initialize();
 
-  // Inisialisasi Notification Service
-  final notificationService = NotificationService();
+  // Inisialisasi SIMPLE Notification Service - PASTI BEKERJA!
+  final notificationService = SimpleNotificationService();
   await notificationService.initialize();
 
   runApp(
@@ -37,9 +37,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Set navigatorKey untuk NotificationService
-    NotificationService.navigatorKey = navigatorKey;
-
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // Temporarily disabled until OAuth is configured
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'registration_page.dart';
 import 'onboarding_page.dart';
+import 'home_page.dart';
 // import '../services/google_auth_service.dart';
 // import '../services/auth_exceptions.dart';
 
@@ -74,13 +76,30 @@ class _LoginPageState extends State<LoginPage>
 
       if (!mounted) return;
 
-      // Login berhasil, navigasi ke onboarding
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const OnboardingPage(),
-        ),
-      );
+      // Cek apakah user sudah pernah lihat onboarding
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
+      if (!mounted) return;
+
+      // Login berhasil, navigasi ke onboarding atau home
+      if (hasSeenOnboarding) {
+        // User sudah pernah lihat onboarding, langsung ke HomePage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
+        );
+      } else {
+        // User baru, tampilkan onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const OnboardingPage(),
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'Login gagal';
 

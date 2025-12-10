@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -77,7 +78,13 @@ class _OnboardingPageState extends State<OnboardingPage>
     super.dispose();
   }
 
-  void _onMulaiPressed() {
+  Future<void> _onMulaiPressed() async {
+    // Simpan status bahwa user sudah lihat onboarding
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenOnboarding', true);
+
+    if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(

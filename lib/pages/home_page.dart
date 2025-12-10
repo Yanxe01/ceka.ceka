@@ -11,7 +11,7 @@ import '../models/group_model.dart'; // PENTING: Pakai GroupModel
 import '../services/services.dart';  // PENTING: Import Service
 import 'group_detail_page.dart';
 import '../utils/migrate_user_data.dart';
-import '../services/notification_service.dart';
+import '../services/simple_notification_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,8 +62,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // Auto-migrate user data jika diperlukan
     _autoMigrateUserData();
 
-    // Setup notification listener setelah user login
-    NotificationService().setupNotificationListener();
+    // Setup SIMPLE notification listener - PASTI BEKERJA!
+    _setupNotifications();
+  }
+
+  /// Setup notifikasi yang PASTI BEKERJA
+  Future<void> _setupNotifications() async {
+    final notifService = SimpleNotificationService();
+    await notifService.initialize();
+
+    // Setup SEMUA listener untuk notifikasi lengkap
+    notifService.setupExpenseListener();        // Notifikasi expense baru
+    notifService.setupGroupListener();          // Notifikasi member join
+    notifService.setupPaymentListener();        // Notifikasi payment submission & confirmation
+    notifService.setupDebtListener();           // Notifikasi debt/piutang (payer_covered)
+    notifService.setupReminderNotifications();  // Notifikasi H-1 jatuh tempo
+
+    // // Kirim test notification untuk memastikan sistem bekerja
+    // print('📢 Sending test notification...');
+    // await notifService.sendTestNotification();
   }
 
   /// Auto-migrate user data dari field lama (name, phone) ke field baru (displayName, phoneNumber)

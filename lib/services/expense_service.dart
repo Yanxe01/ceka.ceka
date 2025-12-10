@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/reminder_service.dart';
 
 class ExpenseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -50,11 +51,11 @@ class ExpenseService {
     if (dueDate != null) {
       final reminderService = ReminderService();
       await reminderService.scheduleH1Reminder(
-        expenseId: docRef.id,
-        groupId: groupId,
-        expenseTitle: title,
-        dueDate: dueDate,
-        splitDetails: splitDetails,
+        docRef.id,        // expenseId
+        groupId,          // groupId
+        title,            // expenseTitle
+        dueDate,          // dueDate
+        splitDetails,     // splitDetails
       );
     }
 

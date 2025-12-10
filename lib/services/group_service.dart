@@ -190,8 +190,9 @@ class GroupService {
 
       // Kirim notifikasi ke semua member lain tentang member baru yang join
       final groupData = await _groups.doc(doc.id).get();
-      final groupName = groupData.data()?['name'] ?? 'Unknown Group';
-      final allMembers = List<String>.from(groupData.data()?['members'] ?? []);
+      final groupDataMap = groupData.data() as Map<String, dynamic>?; // Tambahkan cast ini
+      final groupName = groupDataMap?['name'] ?? 'Unknown Group'; // Gunakan groupDataMap
+      final allMembers = List<String>.from(groupDataMap?['members'] ?? []); // Gunakan groupDataMap
 
       // Kirim notifikasi ke semua member kecuali yang baru join
       final notificationService = NotificationService();

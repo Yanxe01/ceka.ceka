@@ -67,9 +67,7 @@ class FirebaseConfig {
       await Firebase.initializeApp();
     } else {
       // Platform lain: Gunakan config manual
-      await Firebase.initializeApp(
-        options: currentPlatform,
-      );
+      await Firebase.initializeApp(options: currentPlatform);
     }
   }
 }

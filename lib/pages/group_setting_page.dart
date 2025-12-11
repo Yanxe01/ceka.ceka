@@ -8,7 +8,7 @@ import '../models/user_model.dart';
 import '../services/services.dart';
 
 class GroupSettingsPage extends StatefulWidget {
-  final GroupModel group; 
+  final GroupModel group;
 
   const GroupSettingsPage({super.key, required this.group});
 
@@ -99,9 +99,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text('Gagal memilih gambar: $e'),
-              ),
+              Expanded(child: Text('Gagal memilih gambar: $e')),
             ],
           ),
           backgroundColor: Colors.red,
@@ -188,9 +186,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Text('Gagal mengupload gambar: $e'),
-                ),
+                Expanded(child: Text('Gagal mengupload gambar: $e')),
               ],
             ),
             backgroundColor: Colors.red,
@@ -210,34 +206,53 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
 
   // --- 1. FUNGSI EDIT INFO GRUP ---
   void _showEditDialog() {
-    TextEditingController nameController = TextEditingController(text: _groupName);
-    TextEditingController descController = TextEditingController(text: _description);
+    TextEditingController nameController = TextEditingController(
+      text: _groupName,
+    );
+    TextEditingController descController = TextEditingController(
+      text: _description,
+    );
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Edit Info Grup", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Edit Info Grup",
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Nama Grup")),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Nama Grup"),
+            ),
             const SizedBox(height: 10),
-            TextField(controller: descController, decoration: const InputDecoration(labelText: "Info / Deskripsi"), maxLines: 2),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(labelText: "Info / Deskripsi"),
+              maxLines: 2,
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF087B42)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF087B42),
+            ),
             onPressed: () {
               setState(() {
                 _groupName = nameController.text;
                 _description = descController.text;
-                if (_totalExpense == 0) _totalExpense = 1250000; 
+                if (_totalExpense == 0) _totalExpense = 1250000;
               });
               Navigator.pop(context);
-            }, 
-            child: const Text("Simpan", style: TextStyle(color: Colors.white))
+            },
+            child: const Text("Simpan", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -252,7 +267,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // Sudut bulat
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ), // Sudut bulat
         backgroundColor: Colors.white,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -295,10 +312,13 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Container untuk Kode Invite
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0DB662).withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
@@ -336,7 +356,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -365,7 +387,10 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               margin: const EdgeInsets.all(16),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               duration: const Duration(seconds: 2),
                             ),
                           );
@@ -378,14 +403,18 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        icon: const Icon(Icons.copy_rounded, size: 20, color: Colors.white),
+                        icon: const Icon(
+                          Icons.copy_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                         label: const Text(
                           "Salin Kode",
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 14,
                             color: Colors.white,
-                            fontWeight: FontWeight.w600
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -404,28 +433,33 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
   void _removeMember(int index) {
     final uid = _memberUids[index];
     final memberName = _memberDetails[uid]?.displayName ?? uid;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Hapus Anggota?"),
         content: Text("Yakin ingin menghapus $memberName dari grup?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog
-              
+
               try {
-                print("DEBUG: Attempting to remove member $uid from group ${widget.group.id}");
+                print(
+                  "DEBUG: Attempting to remove member $uid from group ${widget.group.id}",
+                );
                 await GroupService().removeMember(widget.group.id, uid);
-                
+
                 if (mounted) {
                   setState(() {
                     _memberUids.removeAt(index);
                     _memberDetails.remove(uid);
                   });
-                  
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text("Member berhasil dihapus"),
@@ -458,14 +492,19 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Keluar Grup?"),
-        content: const Text("Kamu tidak akan bisa melihat aktivitas grup ini lagi."),
+        content: const Text(
+          "Kamu tidak akan bisa melihat aktivitas grup ini lagi.",
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
           TextButton(
             onPressed: () async {
               // Close dialog first
               Navigator.pop(context);
-              
+
               // Show loading
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -475,7 +514,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   ),
                 );
               }
-              
+
               try {
                 print("DEBUG: Attempting to leave group ${widget.group.id}");
                 await GroupService().leaveGroup(widget.group.id);
@@ -511,9 +550,14 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Hapus Grup Permanen?"),
-        content: const Text("Tindakan ini tidak bisa dibatalkan. Semua data expense akan terhapus."),
+        content: const Text(
+          "Tindakan ini tidak bisa dibatalkan. Semua data expense akan terhapus.",
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
           TextButton(
             onPressed: () async {
               // Save context before async operations
@@ -579,9 +623,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       children: [
                         const Icon(Icons.error_outline, color: Colors.white),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text("Error: ${e.toString()}"),
-                        ),
+                        Expanded(child: Text("Error: ${e.toString()}")),
                       ],
                     ),
                     backgroundColor: Colors.red,
@@ -594,7 +636,10 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 );
               }
             },
-            child: const Text("Hapus Grup", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Hapus Grup",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -609,7 +654,15 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: const BackButton(color: Color(0xFF087B42)),
-        title: const Text("Group settings", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20)),
+        title: const Text(
+          "Group settings",
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -622,7 +675,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onTap: isCurrentUserAdmin && !_isLoadingImage ? _pickImage : null,
+                  onTap: isCurrentUserAdmin && !_isLoadingImage
+                      ? _pickImage
+                      : null,
                   child: Stack(
                     children: [
                       Container(
@@ -636,42 +691,50 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: _selectedImage != null
-                              ? Image.file(
-                                  _selectedImage!,
+                              ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                              : _currentImageUrl != null &&
+                                    _currentImageUrl!.isNotEmpty
+                              ? Image.network(
+                                  _currentImageUrl!,
                                   fit: BoxFit.cover,
-                                )
-                              : _currentImageUrl != null && _currentImageUrl!.isNotEmpty
-                                  ? Image.network(
-                                      _currentImageUrl!,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/design1.png',
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Image.asset(
-                                          'assets/images/design1.png',
-                                          fit: BoxFit.cover,
-                                          opacity: const AlwaysStoppedAnimation(0.5),
-                                        );
-                                      },
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
+                                      opacity: const AlwaysStoppedAnimation(
+                                        0.5,
+                                      ),
+                                    );
+                                  },
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
                                         return Center(
                                           child: CircularProgressIndicator(
-                                            value: loadingProgress.expectedTotalBytes != null
-                                                ? loadingProgress.cumulativeBytesLoaded /
-                                                    loadingProgress.expectedTotalBytes!
+                                            value:
+                                                loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
                                                 : null,
                                             strokeWidth: 2,
-                                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                              Color(0xFF0DB662),
-                                            ),
+                                            valueColor:
+                                                const AlwaysStoppedAnimation<
+                                                  Color
+                                                >(Color(0xFF0DB662)),
                                           ),
                                         );
                                       },
-                                    )
-                                  : Image.asset(
-                                      'assets/images/design1.png',
-                                      fit: BoxFit.cover,
-                                      opacity: const AlwaysStoppedAnimation(0.5),
-                                    ),
+                                )
+                              : Image.asset(
+                                  'assets/images/design1.png',
+                                  fit: BoxFit.cover,
+                                  opacity: const AlwaysStoppedAnimation(0.5),
+                                ),
                         ),
                       ),
                       if (_isLoadingImage)
@@ -684,7 +747,9 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                             child: const Center(
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -698,10 +763,7 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFF0DB662),
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2,
-                              ),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: const Icon(
                               Icons.camera_alt,
@@ -721,24 +783,65 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(child: Text(_groupName, style: const TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold))),
+                          Expanded(
+                            child: Text(
+                              _groupName,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                           if (isCurrentUserAdmin)
                             InkWell(
                               onTap: _showEditDialog,
-                              child: const Padding(padding: EdgeInsets.all(4.0), child: Text("Edit", style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF087B42)))),
-                            )
+                              child: const Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  "Edit",
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF087B42),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       if (_description.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(_description, style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey[600])),
+                        Text(
+                          _description,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ],
                       if (_totalExpense > 0) ...[
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFFFFEBEE), borderRadius: BorderRadius.circular(8)),
-                          child: Text("Total Expense: Rp ${_totalExpense.toStringAsFixed(0)}", style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFD32F2F))),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFEBEE),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "Total Expense: Rp ${_totalExpense.toStringAsFixed(0)}",
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFD32F2F),
+                            ),
+                          ),
                         ),
                       ],
                     ],
@@ -751,9 +854,16 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
             const Divider(),
             const SizedBox(height: 10),
 
-            const Text("Group Member", style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+            const Text(
+              "Group Member",
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
             const SizedBox(height: 16),
-            
+
             // --- INVITE LINK (SEKARANG BISA DIKLIK) ---
             InkWell(
               onTap: _showInviteDialog, // <--- Panggil fungsi popup di sini
@@ -764,11 +874,15 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                   children: [
                     Transform.rotate(
                       angle: -0.7,
-                      child: const Icon(Icons.link, size: 24, color: Colors.grey),
+                      child: const Icon(
+                        Icons.link,
+                        size: 24,
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      "Invite via link",
+                      "Invite Code",
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w500,
@@ -776,7 +890,11 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                       ),
                     ),
                     const Spacer(),
-                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey) // Panah kecil di ujung
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Colors.grey,
+                    ), // Panah kecil di ujung
                   ],
                 ),
               ),
@@ -793,25 +911,26 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                 ),
               )
             else if (_memberUids.isEmpty)
-              const Center(
-                child: Text("No members in this group"),
-              )
+              const Center(child: Text("No members in this group"))
             else
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _memberUids.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 20),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 20),
                 itemBuilder: (context, index) {
                   final uid = _memberUids[index];
                   final member = _memberDetails[uid];
                   bool isMemberAdmin = index == 0;
-                  
+
                   // Get display name (fallback ke email prefix)
-                  final displayName = (member?.displayName != null && member!.displayName!.isNotEmpty)
+                  final displayName =
+                      (member?.displayName != null &&
+                          member!.displayName!.isNotEmpty)
                       ? member.displayName!
                       : member?.email.split('@')[0] ?? uid;
-                  
+
                   return Row(
                     children: [
                       Container(
@@ -823,8 +942,13 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                         ),
                         child: Center(
                           child: Text(
-                            displayName.isNotEmpty ? displayName[0].toUpperCase() : "?",
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            displayName.isNotEmpty
+                                ? displayName[0].toUpperCase()
+                                : "?",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
                         ),
                       ),
@@ -837,35 +961,58 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
                               children: [
                                 Text(
                                   displayName,
-                                  style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                                 if (isMemberAdmin) ...[
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFE8F5E9),
                                       borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: const Color(0xFF087B42), width: 0.5),
+                                      border: Border.all(
+                                        color: const Color(0xFF087B42),
+                                        width: 0.5,
+                                      ),
                                     ),
                                     child: const Text(
                                       "Admin",
-                                      style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF087B42), fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 10,
+                                        color: Color(0xFF087B42),
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ]
+                                ],
                               ],
                             ),
                             Text(
                               member?.email ?? "No email",
-                              style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[400]),
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: Colors.grey[400],
+                              ),
                             ),
                           ],
                         ),
                       ),
                       if (isCurrentUserAdmin && !isMemberAdmin)
                         IconButton(
-                          icon: Icon(Icons.remove_circle_outline, color: Colors.red[300], size: 20),
+                          icon: Icon(
+                            Icons.remove_circle_outline,
+                            color: Colors.red[300],
+                            size: 20,
+                          ),
                           onPressed: () => _removeMember(index),
                         ),
                     ],
@@ -874,21 +1021,42 @@ class _GroupSettingsPageState extends State<GroupSettingsPage> {
               ),
 
             const SizedBox(height: 40),
-            
+
             // FOOTER BUTTONS
             InkWell(
               onTap: _confirmLeaveGroup,
-              child: Row(children: const [Icon(Icons.exit_to_app_rounded, color: Colors.grey), SizedBox(width: 12), Text("Leave Group", style: TextStyle(fontFamily: 'Poppins', color: Colors.grey))]),
+              child: Row(
+                children: const [
+                  Icon(Icons.exit_to_app_rounded, color: Colors.grey),
+                  SizedBox(width: 12),
+                  Text(
+                    "Leave Group",
+                    style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
-            
+
             if (isCurrentUserAdmin) ...[
               const SizedBox(height: 24),
               InkWell(
                 onTap: _confirmDeleteGroup,
-                child: Row(children: const [Icon(Icons.delete_outline_rounded, color: Colors.red), SizedBox(width: 12), Text("Delete Group", style: TextStyle(fontFamily: 'Poppins', color: Colors.red))]),
+                child: Row(
+                  children: const [
+                    Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    SizedBox(width: 12),
+                    Text(
+                      "Delete Group",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-            
+
             const SizedBox(height: 50),
           ],
         ),

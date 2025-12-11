@@ -47,38 +47,163 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     });
   }
 
-  // Fungsi Pop-up Invite Link
+  // Fungsi Pop-up Invite Code (sama seperti di group_setting_page.dart)
   void _showInviteDialog() {
-    String inviteLink = "https://cekaceka.id/invite/${widget.group.name.replaceAll(' ', '')}";
+    // Ambil invite code dari group
+    String inviteCode = widget.group.inviteCode;
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         backgroundColor: Colors.white,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Link yang dapat dibagikan", textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Poppins', fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 20),
+              // Icon
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 5, 5, 5),
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), border: Border.all(color: Colors.grey.shade300)),
-                child: Row(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0DB662).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.qr_code_rounded,
+                  size: 32,
+                  color: Color(0xFF0DB662),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Kode Invite Grup",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Bagikan kode ini untuk mengundang anggota baru",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Container untuk Kode Invite
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0DB662).withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF0DB662), width: 2),
+                ),
+                child: Column(
                   children: [
-                    Expanded(child: Text(inviteLink, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.black87, decoration: TextDecoration.underline))),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: inviteLink));
-                        Navigator.pop(context); 
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Link berhasil disalin!"), backgroundColor: Color(0xFF087B42), duration: Duration(seconds: 2)));
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF087B42), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)), elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-                      icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.white),
-                      label: const Text("Salin link", style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
+                    // Kode Invite (Besar dan Bold)
+                    Text(
+                      inviteCode,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 4,
+                        color: Color(0xFF0DB662),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Tombol Salin Kode
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Logic Copy Clipboard
+                          Clipboard.setData(ClipboardData(text: inviteCode));
+                          Navigator.pop(context); // Tutup dialog
+
+                          // Tampilkan Notifikasi
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Expanded(
+                                    child: Text(
+                                      'Kode berhasil disalin!',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: const Color(0xFF0DB662),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              margin: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0DB662),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        icon: const Icon(
+                          Icons.copy_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          "Salin Kode",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
